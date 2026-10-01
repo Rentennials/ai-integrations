@@ -21,8 +21,8 @@ el servidor MCP ni lógica de acceso al ecosistema privado.
   sin firmas ni trailers de atribución. No push, amend, rebase ni force.
 - El build de views, el harness y los tests pedidos están permitidos acá.
   Scripts: yarn lint/typecheck/test/build/views:dev/test:e2e y
-  openai:validate/openai:package. Los tests/harness/build de views requieren la
-  entrega del agente de diseño; no informar éxito sin correrlos.
+  openai:validate/openai:package. Las views del agente están integradas: build
+  antes de harness/Playwright; no informar éxito sin correr los comandos.
 - Cambios de pantallas dentro de `views/src/<view>/`; comunicación por el
   bridge oficial, sin red propia ni llamadas de escritura desde la UI.
 

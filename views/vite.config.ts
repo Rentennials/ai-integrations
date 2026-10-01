@@ -14,6 +14,12 @@ export default defineConfig(({ command, mode }) => {
   }
 
   return {
+    define: {
+      'import.meta.env.VITE_MCP_UI_IMAGE_HOSTS': JSON.stringify(process.env.MCP_UI_IMAGE_HOSTS ?? ''),
+      'import.meta.env.VITE_MCP_UI_LINK_ORIGINS': JSON.stringify(
+        process.env.MCP_PUBLIC_URL ? new URL(process.env.MCP_PUBLIC_URL).origin : ''
+      ),
+    },
     root: command === 'build' ? resolve(root, 'src', mode) : resolve(root, 'src/_harness'),
     plugins: [
       react(),
