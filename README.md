@@ -49,41 +49,52 @@ yarn openai:package
 ```
 
 La instalación inicial y la generación de `yarn.lock` las hace el usuario;
-los workflows requieren ese lockfile. `views/VIEWS-SPEC.md` es el documento de
-traspaso para el agente de diseño, que implementa las entradas, harness, fixtures
-y tests dentro de `views/`.
+los workflows requieren ese lockfile. `views/VIEWS-SPEC.md` es la especificación
+de las pantallas entregadas por el agente de diseño e integradas en `views/`.
 
 El build necesita una entrada `views/src/<view>/index.html` por pantalla; el
-dev server usa `views/src/_harness/index.html`. Los tests y el harness aún no
-existen: sus comandos fallarán hasta completar esa entrega. No se consideran
-validación real del plugin en ChatGPT/Codex.
+dev server usa `views/src/_harness/index.html`. Ejecutar `yarn build` antes de
+abrir el harness o correr Playwright. El harness usa AppBridge real, sandbox
+de otro origen y CSP restrictiva; no se conecta al backend. Sus pruebas no
+equivalen a validación del plugin en ChatGPT/Codex reales.
 
 ## Paquete OpenAI
 
 `openai/plugin.json`, `mcp.json`, `listing.md` y `test-cases.md` contienen el
 material público. El script valida schemas canónicos, metadata y PNGs y genera
-`openai/dist/rentennials-openai-<versión>.zip`. Configurar `OPENAI_SUPPORT_URL`
-con una página HTTPS aprobada; `MCP_PUBLIC_URL` permite inyectar el endpoint
+`openai/dist/rentennials-openai-<versión>.zip`. Soporte confirmado:
+`https://www.rentennials.app/contact`; `OPENAI_SUPPORT_URL` puede sobrescribirlo.
+`MCP_PUBLIC_URL` permite inyectar el endpoint
 según el ambiente. No cargar estas URLs de pruebas en archivos fuente ni subir
 un artefacto de pruebas al directorio.
 
 Los scripts leen variables del proceso, no cargan automáticamente `.env`.
 `.env.example` solo enumera sus nombres. En GitHub configurar
-`OPENAI_SUPPORT_URL` como variable del repositorio. El workflow de empaquetado
+`OPENAI_SUPPORT_URL` como variable del repositorio solo si se desea sobrescribir
+la página de contacto. El workflow de empaquetado
 fija el endpoint productivo y no incluye `.app.json` ni credenciales.
 
 ## Estado y pendientes
 
-Setup y workflows implementados, dependencias declaradas sin instalación local.
-Pantallas/tests/harness pendientes del agente de diseño. El validador del plugin
-requiere soporte y estos assets oficiales: `icon.png`, `icon-dark.png`,
-`logo.png`, `logo-dark.png` y `screenshot-1.png` a `screenshot-4.png`, dentro
-de `openai/assets/`. Falla si falta cualquier asset; no produce un ZIP incompleto.
+Setup, cinco pantallas, fixtures/tests/harness y workflows implementados.
+Lint, typecheck, 47 tests Vitest, build y 39 tests Playwright pasan con Node 22.
+El árbol de distribución se validó en dry-run; el tag público aún está pendiente.
+
+Soporte y los cuatro PNG de icono/logo están completos. Los PNG cuadrados
+de 512 px se generaron desde el isotipo y logos SVG públicos del portal, con
+permiso del usuario, manteniendo la geometría y variantes clara/oscura.
+Hay cuatro capturas de harness en esa carpeta, con datos/imágenes sintéticos
+y fuentes fallback. Se deben revisar con marca y material final antes del envío.
+Falla si falta soporte o cualquier asset; no produce un ZIP incompleto.
 Las capturas son de 706 px de ancho y los iconos cuadrados de al menos 48 px.
 
-El CI completo y el dry-run de distribución solo pueden pasar después de la
-instalación/lockfile y entrega frontend/assets. La cuenta demo sin MFA, video y
-evidencia en clientes reales también siguen pendientes.
+El validador del plugin pasa y el ZIP se generó/revisó; esto verifica formato
+y archivos, no aprobación del envío ni comportamiento de producción.
+La cuenta demo sin MFA, archivos de tipografía, video y evidencia en clientes
+reales también siguen pendientes. Las capturas de Claude quedan en
+`views/test-results/claude/` y las de OpenAI se generan en
+`views/test-results/openai/` antes de incorporarlas al paquete.
 
-No se eligió una licencia de distribución. El canal de soporte y los assets
-oficiales para el listing están pendientes de confirmación.
+No se eligió una licencia de distribución. El canal especializado de reporte
+de vulnerabilidades está pendiente de definición; soporte general confirmado
+en la página de contacto.

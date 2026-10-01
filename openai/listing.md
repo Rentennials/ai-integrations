@@ -1,6 +1,6 @@
 # Rentennials
 
-Status: draft. Public support URL, official icons, screenshots and client review evidence are pending.
+Status: draft. Support page confirmed; 512-pixel PNG icons/logos generated from official public SVGs with approval. Harness screenshots use synthetic data and fallback fonts. Final screenshot review and real client evidence remain pending.
 
 ## App information
 
@@ -12,7 +12,7 @@ Status: draft. Public support URL, official icons, screenshots and client review
 - Website: https://www.rentennials.app
 - Privacy: https://rentennials.app/privacy-policy
 - Terms: https://www.rentennials.app/terms-and-conditions
-- Support: pending an approved HTTPS page; configure OPENAI_SUPPORT_URL when packaging.
+- Support: https://www.rentennials.app/contact. OPENAI_SUPPORT_URL may override it when packaging.
 - Locales: English and Spanish. Countries: AR, US, MX, PE.
 
 Find cars on Rentennials in Argentina, the United States, Mexico and Peru. Compare vehicles, pickup options, owner conditions and quotes with coverages and extras. Connect your account to see your trips and request a booking after explicitly confirming its price and dates. Some vehicles require owner approval and others immediate payment. Payment happens on a secure Rentennials-hosted page outside the conversation. Flights, in-chat card payments and booking cancellations are outside this plugin's scope.

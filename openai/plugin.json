@@ -16,6 +16,7 @@
         "category": "Travel",
         "capabilities": ["Read", "Write"],
         "websiteURL": "https://www.rentennials.app",
+        "supportURL": "https://www.rentennials.app/contact",
         "privacyPolicyURL": "https://rentennials.app/privacy-policy",
         "termsOfServiceURL": "https://www.rentennials.app/terms-and-conditions",
         "defaultPrompt": [
