@@ -6,6 +6,28 @@ import { fileURLToPath } from 'node:url';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
 
+interface OpenaiInterface {
+  websiteURL: string;
+  supportURL: string;
+  privacyPolicyURL: string;
+  termsOfServiceURL: string;
+  composerIcon: string;
+  composerIconDark?: string;
+  logo: string;
+  logoDark?: string;
+  screenshots: string[];
+}
+
+interface PluginManifest {
+  name: string;
+  version: string;
+  extensions: Record<string, { interface?: OpenaiInterface }>;
+}
+
+interface McpConfiguration {
+  mcpServers: Record<string, { type: string; url: string; headers?: Record<string, string> }>;
+}
+
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const schemas = {
   plugin: 'https://agent-plugins.org/schemas/1.0.0/plugin.schema.json',
@@ -78,8 +100,8 @@ const main = async () => {
   const ajv = new Ajv2020({ allErrors: true, strict: false });
   addFormats(ajv);
   const [pluginSchema, mcpSchema] = await Promise.all([fetchSchema(schemas.plugin), fetchSchema(schemas.mcp)]);
-  const validatePlugin = ajv.compile(pluginSchema);
-  const validateMcp = ajv.compile(mcpSchema);
+  const validatePlugin = ajv.compile<PluginManifest>(pluginSchema);
+  const validateMcp = ajv.compile<McpConfiguration>(mcpSchema);
   if (!validatePlugin(plugin)) throw new Error(`plugin.json does not match its schema: ${ajv.errorsText(validatePlugin.errors)}`);
   if (plugin.name !== 'rentennials' || !/^\d+\.\d+\.\d+$/.test(plugin.version ?? '')) throw new Error('Plugin identity or version is invalid.');
   const workspace = JSON.parse((await readContained('package.json')).toString('utf8'));
@@ -87,9 +109,9 @@ const main = async () => {
   const ui = plugin.extensions?.['com.openai']?.interface;
   if (!ui || typeof ui !== 'object') throw new Error('OpenAI interface metadata is required.');
   if (process.env.OPENAI_SUPPORT_URL) ui.supportURL = process.env.OPENAI_SUPPORT_URL;
-  const validateInterface = ajv.compile(interfaceSchema);
+  const validateInterface = ajv.compile<OpenaiInterface>(interfaceSchema);
   if (!validateInterface(ui)) throw new Error(`OpenAI metadata is incomplete: ${ajv.errorsText(validateInterface.errors)}`);
-  for (const key of ['websiteURL', 'supportURL', 'privacyPolicyURL', 'termsOfServiceURL']) safeHttps(ui[key]);
+  for (const value of [ui.websiteURL, ui.supportURL, ui.privacyPolicyURL, ui.termsOfServiceURL]) safeHttps(value);
   const url = safeHttps(process.env.MCP_PUBLIC_URL || mcp.mcpServers?.rentennials?.url || '');
   if (url.pathname !== '/mcp' || url.search) throw new Error('MCP URL must end at /mcp without query parameters.');
   if (process.env.NODE_ENV === 'production' && url.origin !== 'https://mcp.rentennials.app') throw new Error('Production MCP origin must remain stable.');
