@@ -1,0 +1,12 @@
+{
+  "name": "rentennials-openai-plugin",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "validate": "node --experimental-strip-types scripts/build-package.ts --validate",
+    "build": "node --experimental-strip-types scripts/build-package.ts"
+  },
+  "devDependencies": { "ajv": "^8.17.1", "ajv-formats": "^3.0.1" }
+}

@@ -1,0 +1,25 @@
+name: Package OpenAI plugin
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - run: corepack enable
+      - run: test -f yarn.lock && yarn install --frozen-lockfile
+      - run: yarn openai:package
+        env:
+          NODE_ENV: production
+          MCP_PUBLIC_URL: https://mcp.rentennials.app/mcp
+          OPENAI_SUPPORT_URL: ${{ vars.OPENAI_SUPPORT_URL }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rentennials-openai-plugin
+          path: openai/dist/*.zip
+          if-no-files-found: error

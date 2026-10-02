@@ -1,0 +1,94 @@
+name: Release views
+on:
+  pull_request:
+  push:
+    tags: ['mcp-views-v*']
+permissions:
+  contents: read
+jobs:
+  distribution:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - run: corepack enable
+      - run: test -f yarn.lock && yarn install --frozen-lockfile
+      - run: yarn build
+      - name: Prepare and validate distribution tree
+        env:
+          RELEASE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+        run: |
+          node --input-type=module <<'NODE'
+          import { cpSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+          import { join } from 'node:path';
+          const pkg = JSON.parse(readFileSync('views/package.json', 'utf8'));
+          if (!/^\d+\.\d+\.\d+$/.test(pkg.version)) throw new Error('Invalid views version');
+          if (process.env.RELEASE_TAG && process.env.RELEASE_TAG !== `mcp-views-v${pkg.version}`) throw new Error('Tag and package version differ');
+          const names = ['vehicle-results', 'vehicle-detail', 'quote', 'booking-confirmation', 'my-bookings'];
+          const manifest = JSON.parse(readFileSync('views/dist/manifest.json', 'utf8'));
+          if (!Array.isArray(manifest) || manifest.length !== names.length) throw new Error('Expected five views');
+          const seen = new Set();
+          for (const view of manifest) {
+            if (!names.includes(view.name) || seen.has(view.name) || view.uri !== `ui://rentennials/${view.name}` || view.file !== `${view.name}.html`) throw new Error('Invalid manifest entry');
+            if (!Array.isArray(view.csp?.connectDomains) || view.csp.connectDomains.length || !Array.isArray(view.csp?.resourceDomains)) throw new Error('Invalid CSP');
+            for (const origin of view.csp.resourceDomains) {
+              const url = new URL(origin);
+              if (url.protocol !== 'https:' || url.username || url.password || url.origin !== origin || origin.includes('*')) throw new Error('Invalid image origin');
+            }
+            const file = join('views/dist', view.file);
+            if (!statSync(file).isFile() || !readFileSync(file, 'utf8').includes('<html')) throw new Error('Missing HTML');
+            seen.add(view.name);
+          }
+          const expected = ['manifest.json', ...names.map(name => `${name}.html`)];
+          if (readdirSync('views/dist').some(file => !expected.includes(file))) throw new Error('Unexpected distribution file');
+          const target = join(process.env.RUNNER_TEMP, 'distribution');
+          mkdirSync(target, { recursive: true });
+          cpSync('views/dist', join(target, 'dist'), { recursive: true });
+          writeFileSync(join(target, 'package.json'), JSON.stringify({ name: 'rentennials-mcp-views', version: pkg.version, files: ['dist'] }, null, 2) + '\n');
+          NODE
+      - name: Check orphan commit without publishing
+        working-directory: ${{ runner.temp }}/distribution
+        run: |
+          git init
+          git add package.json dist
+          git -c user.name=Rentennials -c user.email=actions@users.noreply.github.com -c commit.gpgsign=false commit -m "chore: distribución de views"
+          test "$(git ls-tree --name-only HEAD | wc -l)" -eq 2
+          test "$(git rev-list --count HEAD)" -eq 1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: views-distribution
+          path: |
+            ${{ runner.temp }}/distribution/package.json
+            ${{ runner.temp }}/distribution/dist/
+          if-no-files-found: error
+  publish:
+    if: github.event_name == 'push' && github.ref_type == 'tag'
+    needs: distribution
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: views-distribution
+          path: ${{ runner.temp }}/distribution
+      - name: Publish distribution tag only
+        working-directory: ${{ runner.temp }}/distribution
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_TAG: ${{ github.ref_name }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          version="${SOURCE_TAG#mcp-views-v}"
+          tag="mcp-views-dist-v${version}"
+          remote="https://github.com/${REPOSITORY}.git"
+          test -z "$(git ls-remote --tags "$remote" "refs/tags/$tag")"
+          git init
+          git add package.json dist
+          git -c user.name=Rentennials -c user.email=actions@users.noreply.github.com -c commit.gpgsign=false commit -m "chore: distribución de views ${version}"
+          git tag "$tag"
+          auth="$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          printf '::add-mask::%s\n' "$auth"
+          git -c "http.extraHeader=AUTHORIZATION: basic $auth" push "$remote" "refs/tags/$tag:refs/tags/$tag"

@@ -1,0 +1,41 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "rentennials",
+  "version": "1.0.0",
+  "description": "Search rental cars, compare quotes, request bookings and manage your Rentennials trips. Payments are completed on Rentennials, outside the conversation.",
+  "author": { "name": "Rentennials", "url": "https://www.rentennials.app" },
+  "homepage": "https://www.rentennials.app",
+  "repository": "https://github.com/Rentennials/ai-integrations",
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Rentennials",
+        "shortDescription": "Find and book rental cars",
+        "longDescription": "Find cars on Rentennials in Argentina, the United States, Mexico and Peru. Compare available vehicles, see pickup options and rental conditions, and request a quote with coverages and extras. Connect your account to see your bookings, complete required profile information and request a booking after explicitly confirming its price and dates. Some vehicles require owner approval; others require immediate payment. Payments take place on a secure Rentennials-hosted page outside the conversation. This plugin does not book flights, accept card details in chat or cancel bookings.",
+        "developerName": "Rentennials",
+        "category": "Travel",
+        "capabilities": ["Read", "Write"],
+        "websiteURL": "https://www.rentennials.app",
+        "supportURL": "https://www.rentennials.app/contact",
+        "privacyPolicyURL": "https://rentennials.app/privacy-policy",
+        "termsOfServiceURL": "https://www.rentennials.app/terms-and-conditions",
+        "defaultPrompt": [
+          "Find an automatic car for my next trip.",
+          "Compare rental quotes with coverages and extras.",
+          "Show my Rentennials bookings."
+        ],
+        "brandColor": "#7B45F6",
+        "composerIcon": "./assets/icon.png",
+        "composerIconDark": "./assets/icon-dark.png",
+        "logo": "./assets/logo.png",
+        "logoDark": "./assets/logo-dark.png",
+        "screenshots": ["./assets/screenshot-1.png", "./assets/screenshot-2.png", "./assets/screenshot-3.png", "./assets/screenshot-4.png"]
+      },
+      "review": {
+        "commerce": true,
+        "commerce_description": "Rentennials is a peer-to-peer car rental marketplace. The plugin lets users search, quote and request bookings. No payment is captured inside ChatGPT and no card data is handled in the conversation. After explicit booking confirmation, the server may return a time-limited link to a Rentennials-hosted payment page. Approved bookings use the same external payment mechanism. Rental totals, currency, payment amounts and link expiry come from the server. Rentennials Fast, when available, includes a later automatic charge disclosed before confirmation. The booking response reports any difference from the quoted total."
+      },
+      "publication": { "countries": ["AR", "US", "MX", "PE"], "release_notes": "Initial rental search, quotes and booking integration. Client review evidence is pending." }
+    }
+  }
+}
