@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { App } from '@modelcontextprotocol/ext-apps';
+import { version } from '../../package.json';
+import { declaredImageOrigins, IMAGE_ORIGINS } from '../_shared/safety';
 
 export type ToolResult = {
   content?: unknown[];
   structuredContent?: unknown;
   isError?: boolean;
+  _meta?: Record<string, unknown>;
 };
 
 export type HostContext = {
@@ -23,12 +26,14 @@ export type BridgeState = {
   receivedAt: number;
   hostContext: HostContext;
   actionError: boolean;
+  imageOrigins: readonly string[];
 };
 
 export type Actions = {
   callServerTool: (name: string, args: Record<string, unknown>) => Promise<ToolResult | null>;
   sendMessage: (text: string) => Promise<boolean>;
   openLink: (url: string) => Promise<boolean>;
+  updateModelContext: (context: Record<string, unknown>) => Promise<boolean>;
 };
 
 export type McpView = BridgeState & { actions: Actions };
@@ -48,10 +53,11 @@ export function useMcpApp(viewName: string): McpView {
     receivedAt: 0,
     hostContext: {},
     actionError: false,
+    imageOrigins: IMAGE_ORIGINS,
   });
 
   useEffect(() => {
-    const app = new App({ name: `rentennials-${viewName}`, version: '1.0.0' });
+    const app = new App({ name: `rentennials-${viewName}`, version });
     appRef.current = app;
 
     app.ontoolinput = (params: { arguments?: Record<string, unknown> }) => {
@@ -64,6 +70,7 @@ export function useMcpApp(viewName: string): McpView {
         result,
         receivedAt: Date.now(),
         actionError: false,
+        imageOrigins: [...new Set([...IMAGE_ORIGINS, ...declaredImageOrigins(app.getHostCapabilities()?.sandbox?.csp?.resourceDomains), ...declaredImageOrigins(result._meta?.['rentennials/image_origins'])])],
       }));
     };
     app.ontoolcancelled = () => {
@@ -151,5 +158,15 @@ export function useMcpApp(viewName: string): McpView {
     [fail, clear],
   );
 
-  return { ...state, actions: { callServerTool, sendMessage, openLink } };
+  const updateModelContext = useCallback<Actions['updateModelContext']>(async (context) => {
+    const app = appRef.current;
+    if (!app) return fail(), false;
+    try {
+      await app.updateModelContext({ structuredContent: context });
+      clear();
+      return true;
+    } catch { fail(); return false; }
+  }, [fail, clear]);
+
+  return { ...state, actions: { callServerTool, sendMessage, openLink, updateModelContext } };
 }

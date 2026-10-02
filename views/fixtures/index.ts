@@ -2,7 +2,7 @@ export type Fixture = {
   label: string;
   tool: string;
   input: Record<string, unknown>;
-  result: { content: { type: 'text'; text: string }[]; structuredContent?: unknown; isError?: boolean };
+  result: { content: { type: 'text'; text: string }[]; structuredContent?: unknown; isError?: boolean; _meta?: Record<string, unknown> };
 };
 
 const ok = (structuredContent: unknown, text = 'Synthetic fixture result.') => ({ content: [{ type: 'text' as const, text }], structuredContent });
@@ -58,7 +58,7 @@ export const vehicleDetail = {
     { id: 'mp_fx_2', name: 'Aeropuerto El Plumerillo', type: 'PICKUP', price: 12000 },
     { id: 'mp_fx_3', name: 'Terminal de ómnibus', type: 'RETURN', price: 8000 },
   ],
-  passengers: '5', transmission: 'Manual', fuel: 'Nafta', doors: '5', kms_per_day: '250', timezone: MZA, currency: 'ARS',
+  passengers: '5', transmission: 'Manual', fuel: 'Nafta', doors: '5 Puertas', kms_per_day: '250 kms', timezone: MZA, currency: 'ARS',
   guarantee_deposit: 620000, guarantee_deposit_currency: 'ARS', deductible: 155000, content_warnings: [],
 };
 
@@ -80,10 +80,14 @@ export const quote = {
   total: 174650, currency: 'ARS', total_days: 2, price_per_day: 80000, discount: 3340, discount_code: 'PRIMAVERA',
   pay_now: 90510, pay_on_pickup: 84140, security_deposit: 620000, security_deposit_currency: 'ARS', timezone: MZA, automatic_approval: true,
   payment_fast: { available: true, amount_now: 52395, remaining_amount: 122255, currency: 'ARS', remaining_charge_date: '2026-10-01T18:00' },
-  included_coverages: [{ type: 'franchise_cover', description: 'Cobertura básica', price: 0, deposit_amount: 620000, max_deductible: 620000, luggage_theft_coverage: null }],
+  included_coverages: [
+    { id: 'cov_basic', type: 'franchise_cover', description: 'Cobertura básica', price: 0, deposit_amount: 620000, max_deductible: 620000, luggage_theft_coverage: null },
+    { id: 'cov_deposit_default', type: 'deposit_cover', description: 'Depósito con tarjeta', price: 0, deposit_amount: 620000, max_deductible: null, luggage_theft_coverage: null },
+  ],
   available_coverages: [
     { id: 'cov_fx_1', type: 'franchise_cover', description: 'Cobertura Premium', price: 59000, deposit_amount: 155000, max_deductible: 155000, luggage_theft_coverage: null },
     { id: 'cov_fx_2', type: 'franchise_cover', description: 'Cobertura Platinum', price: 89000, deposit_amount: 155000, max_deductible: 80000, luggage_theft_coverage: 20000 },
+    { id: 'cov_deposit_cash', type: 'deposit_cover', description: 'Depósito sin tarjeta', price: 35000, deposit_amount: 155000, max_deductible: null, luggage_theft_coverage: null },
   ],
   available_extras: [
     { key: 'baby_seat', label: 'Silla de bebé (0 a 3 años)', description: 'Se entrega instalada.', price_by_quantity: [10000, 18000] },
@@ -145,6 +149,7 @@ const quoteInput = { vehicle_id: '000000000000000000000001', from_date: '2026-10
 
 export const fixtures: Record<string, Record<string, Fixture>> = {
   'vehicle-results': {
+    runtime: { label: 'Origen dinámico', tool: 'search_vehicles', input: {}, result: { ...ok({ ...searchResult, vehicles: [{ ...searchResult.vehicles[0], image_url: 'https://images.example.com/preview.webp' }] }), _meta: { 'rentennials/image_origins': ['https://images.example.com'] } } },
     ars: { label: 'ARS · 6 autos', tool: 'search_vehicles', input: {}, result: ok(searchResult) },
     usd: { label: 'USD', tool: 'search_vehicles', input: {}, result: ok(searchResultUsd) },
     empty: { label: 'Vacío', tool: 'search_vehicles', input: {}, result: ok({ ...searchResult, vehicles: [], total_count: 0, has_more: false }) },
@@ -183,4 +188,16 @@ export const fixtures: Record<string, Record<string, Fixture>> = {
 export const serverTools: Record<string, (args: Record<string, unknown>) => Fixture['result']> = {
   get_vehicle: (args) => (args.slug === 'vehicle-fx-1' ? ok(vehicleDetail) : ok(vehicleDetailWarnings)),
   get_booking: () => ok(bookingDetail),
+  get_vehicle_quote: (args) => {
+    const requested = Array.isArray(args.covers) ? args.covers : [];
+    const options = [...quote.included_coverages, ...quote.available_coverages];
+    const selected = new Map<string, (typeof options)[number]>(quote.included_coverages.map((cover) => [cover.type, cover]));
+    for (const id of requested) {
+      const option = options.find((cover) => cover.id === id);
+      if (!option) return fail;
+      selected.set(option.type, option);
+    }
+    const extra = [...selected.values()].reduce((sum, cover) => sum + cover.price, 0);
+    return ok({ ...quote, included_coverages: [...selected.values()], total: quote.total + extra });
+  },
 };

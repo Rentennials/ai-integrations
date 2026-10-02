@@ -8,28 +8,29 @@ import { IconCheck, IconDoor, IconFlagEnd, IconFlagStart, IconFuel, IconGear, Ic
 import { Frame, Parsed, type ViewProps } from '../_shared/ViewRoot';
 import { VehicleDetail as VehicleDetailSchema } from '../_shared/contracts';
 import { datesFromArgs } from '../_shared/format';
+import { featureLabel, specValue, SUMMARY_FEATURE_KEYS } from '../_shared/features';
 
 const KNOWN_WARNINGS = ['images_invalid', 'disclaimer_truncated', 'features_invalid'];
 
 export function VehicleDetailContent({
   data, dates, actions,
 }: { data: VehicleDetail; dates: { from: WallTime; to: WallTime } | null; actions: Actions }) {
-  const { t, locale, message } = useI18n();
+  const { t, locale, lang, message } = useI18n();
   const title = data.year ? `${data.name} ${data.year}` : data.name;
   const warnings = data.content_warnings ?? [];
   const features = data.features ?? [];
   const enabled = features.filter((f) => f.value === 'true');
   const disabled = features.filter((f) => f.value === 'false');
-  const textual = features.filter((f) => f.value !== 'true' && f.value !== 'false' && f.value != null && f.value !== '');
+  const textual = features.filter((f) => !SUMMARY_FEATURE_KEYS.has(f.key) && f.value !== 'true' && f.value !== 'false' && f.value != null && f.value !== '');
   const points = data.meeting_points ?? [];
   const tz = timezoneLabel(data.timezone) ?? '—';
 
   const specs = [
-    data.transmission ? { icon: <IconGear size={24} />, label: data.transmission } : null,
+    data.transmission ? { icon: <IconGear size={24} />, label: specValue('transmition', data.transmission, lang) } : null,
     data.passengers ? { icon: <IconUsers size={24} />, label: t('spec.passengers', { n: data.passengers }) } : null,
-    data.fuel ? { icon: <IconFuel size={24} />, label: data.fuel } : null,
-    data.doors ? { icon: <IconDoor size={24} />, label: t('spec.doors', { n: data.doors }) } : null,
-    data.kms_per_day != null ? { icon: <IconRoad size={24} />, label: t('spec.kms', { n: data.kms_per_day }) } : null,
+    data.fuel ? { icon: <IconFuel size={24} />, label: specValue('fuel_car', data.fuel, lang) } : null,
+    data.doors ? { icon: <IconDoor size={24} />, label: specValue('car_doors', data.doors, lang) } : null,
+    data.kms_per_day != null ? { icon: <IconRoad size={24} />, label: specValue('kms_per_day', data.kms_per_day, lang) } : null,
   ].filter((s): s is { icon: ReactElement; label: string } => s !== null);
 
   const [quote, quoting] = useAction(() =>
@@ -94,18 +95,18 @@ export function VehicleDetailContent({
           <SectionHead title={t('detail.equipment')} />
           {enabled.length > 0 ? (
             <ul className="rt-row" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-               {enabled.map((f) => <li key={f.key}><Badge tone="neutral" icon={<IconCheck size={14} />}>{f.label ?? f.key}</Badge></li>)}
+               {enabled.map((f) => <li key={f.key}><Badge tone="neutral" icon={<IconCheck size={14} />}>{featureLabel(f.key, f.label, lang)}</Badge></li>)}
             </ul>
           ) : null}
           {disabled.length > 0 ? (
             <div className="rt-row rt-small">
               <span style={{ fontWeight: 500 }}>{t('detail.notIncluded')}</span>
-              {disabled.map((f) => <span key={f.key} className="rt-row" style={{ gap: 4 }}><IconX size={12} />{f.label}</span>)}
+              {disabled.map((f) => <span key={f.key} className="rt-row" style={{ gap: 4 }}><IconX size={12} />{featureLabel(f.key, f.label, lang)}</span>)}
             </div>
           ) : null}
           {textual.map((f) => (
             <div key={f.key} className="rt-small" style={{ overflowWrap: 'anywhere' }}>
-              <strong style={{ fontWeight: 500, color: 'var(--rt-text-2)' }}>{f.label}:</strong> {f.value}
+              <strong style={{ fontWeight: 500, color: 'var(--rt-text-2)' }}>{featureLabel(f.key, f.label, lang)}:</strong> {f.value}
             </div>
           ))}
         </section>
@@ -153,7 +154,7 @@ export function VehicleDetailContent({
 export function VehicleDetailView({ view }: ViewProps) {
   const { t } = useI18n();
   return (
-    <Frame title={t('title.detail')} view={view}>
+    <Frame title={t('title.detail')} view={view} compactLoading>
       <Parsed schema={VehicleDetailSchema} result={view.result} emptyTitle="noResults" emptyText="state.invalid.text">
         {(data) => <VehicleDetailContent key={view.receivedAt} data={data} dates={datesFromArgs(view.input)} actions={view.actions} />}
       </Parsed>

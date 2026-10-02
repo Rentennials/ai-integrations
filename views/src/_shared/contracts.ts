@@ -59,6 +59,7 @@ export const VehicleDetail = z.object({
 });
 
 const Coverage = z.object({
+  id: str,
   type: str,
   description: str,
   price: num,
@@ -177,3 +178,17 @@ export type PayBookingResult = z.infer<typeof PayBookingResult>;
 export type ListBookingsResult = z.infer<typeof ListBookingsResult>;
 export type BookingSummary = z.infer<typeof BookingSummary>;
 export type BookingDetail = z.infer<typeof BookingDetail>;
+
+export const QuoteArguments = z.object({
+  vehicle_id: z.string().regex(/^[a-f\d]{24}$/i),
+  from_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  to_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  from_date_time: z.string().optional(),
+  to_date_time: z.string().optional(),
+  coupon: z.string().optional(),
+  covers: z.array(z.string()).optional(),
+  pickup_meeting_point_id: z.string().optional(),
+  return_meeting_point_id: z.string().optional(),
+  extra_services: z.array(z.object({ key: z.string(), quantity: z.number().optional() })).optional(),
+});
+export type QuoteArguments = z.infer<typeof QuoteArguments>;

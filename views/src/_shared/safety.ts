@@ -14,6 +14,19 @@ export const LINK_ORIGINS: readonly string[] = [
   ...listFromEnv(import.meta.env.VITE_MCP_UI_LINK_ORIGINS),
 ];
 
+export const ImageOriginContext = createContext<readonly string[]>(IMAGE_ORIGINS);
+
+export function declaredImageOrigins(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((origin): origin is string => {
+    if (typeof origin !== 'string' || origin.includes('*')) return false;
+    try {
+      const url = new URL(origin);
+      return url.protocol === 'https:' && !url.username && !url.password && url.origin === origin;
+    } catch { return false; }
+  });
+}
+
 export function safeHttpsUrl(value: unknown, allowedOrigins: readonly string[]): string | null {
   if (typeof value !== 'string' || value.length === 0) return null;
   let url: URL;
@@ -28,3 +41,4 @@ export function safeHttpsUrl(value: unknown, allowedOrigins: readonly string[]):
 
 export const safeImageUrl = (value: unknown, origins: readonly string[] = IMAGE_ORIGINS) => safeHttpsUrl(value, origins);
 export const safeLinkUrl = (value: unknown, origins: readonly string[] = LINK_ORIGINS) => safeHttpsUrl(value, origins);
+import { createContext } from 'react';

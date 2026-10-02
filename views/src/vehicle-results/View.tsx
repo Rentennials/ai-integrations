@@ -7,11 +7,12 @@ import { useI18n } from '../_shared/i18n';
 import { IconCalendar, IconCheck, IconChevronLeft, IconGear, IconInfo, IconPin, IconStar, IconUsers } from '../_shared/icons';
 import { Frame, Parsed, parseResult, type ViewProps } from '../_shared/ViewRoot';
 import { VehicleDetailContent } from '../vehicle-detail/View';
+import { specValue } from '../_shared/features';
 
 type Dates = { from: WallTime; to: WallTime } | null;
 
 function VehicleCard({ v, dates, actions, onDetail, opening }: { v: VehicleSummary; dates: Dates; actions: Actions; onDetail: () => void; opening: boolean }) {
-  const { t, locale, message } = useI18n();
+  const { t, locale, lang, message } = useI18n();
   const title = v.year ? `${v.name} ${v.year}` : v.name;
   const rating = formatRating(v.owner_rating, locale);
   const total = formatMoney(v.total_price, v.currency, locale);
@@ -48,7 +49,7 @@ function VehicleCard({ v, dates, actions, onDetail, opening }: { v: VehicleSumma
           <span className="rt-meta">{v.city ?? t('results.noCity')}</span>
         </div>
         <div className="rt-vcard__specs">
-          <span className="rt-vcard__spec"><IconGear size={16} />{v.transmission ?? t('results.noTransmission')}</span>
+          <span className="rt-vcard__spec"><IconGear size={16} />{v.transmission ? specValue('transmition', v.transmission, lang) : t('results.noTransmission')}</span>
           <span className="rt-vcard__spec"><IconUsers size={16} />{v.passengers ? t('results.passengers', { n: v.passengers }) : t('results.noPassengers')}</span>
         </div>
         <div className="rt-vcard__price">
@@ -74,6 +75,7 @@ export function VehicleResultsContent({ data, actions }: { data: SearchVehiclesR
   const [detail, setDetail] = useState<{ vehicle: VehicleDetail; dates: Dates } | null>(null);
   const [openingId, setOpeningId] = useState<string | null>(null);
   const [detailFailed, setDetailFailed] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(5);
   const ctx = data.search_context;
   const searched = ctx ? { from: wallFromParts(ctx.from_date, ctx.from_date_time), to: wallFromParts(ctx.to_date, ctx.to_date_time) } : null;
   const dates: Dates = searched?.from && searched.to ? { from: searched.from, to: searched.to } : null;
@@ -116,10 +118,11 @@ export function VehicleResultsContent({ data, actions }: { data: SearchVehiclesR
       {detailFailed ? <Notice tone="err" role="alert" title={t('state.actionFailed.title')}>{t('state.actionFailed.text')}</Notice> : null}
       {openingId ? <span className="rt-sr" role="status">{t('state.loading')}</span> : null}
       <div className="rt-grid">
-        {data.vehicles.map((v) => (
+        {data.vehicles.slice(0, visibleCount).map((v) => (
           <VehicleCard key={v.id} v={v} dates={dates} actions={actions} opening={openingId === v.id} onDetail={() => void openDetail(v)} />
         ))}
       </div>
+      {data.vehicles.length > 5 ? <Button variant="secondary" onClick={() => setVisibleCount(visibleCount >= data.vehicles.length ? 5 : visibleCount + 5)}>{visibleCount >= data.vehicles.length ? t('showLess') : t('showMore')}</Button> : null}
       {data.has_more === true ? <p className="rt-small" style={{ margin: 0, textAlign: 'center' }}>{t('results.hasMore')}</p> : null}
     </div>
   );

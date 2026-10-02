@@ -1,12 +1,25 @@
 import type { Actions } from '../_bridge/useMcpApp';
-import { Quote as QuoteSchema, type Quote } from '../_shared/contracts';
+import { Quote as QuoteSchema, QuoteArguments, type Quote } from '../_shared/contracts';
 import { Button, DateBlock, Notice, PriceRow, SectionHead, TotalPanel, useAction } from '../_shared/components';
 import { datesFromArgs, formatMoney, formatWallDate, formatWallDateTime, formatWallTime, parseWallTime, timezoneLabel, type WallTime } from '../_shared/format';
 import { useI18n } from '../_shared/i18n';
 import { IconBolt, IconClock, IconShield } from '../_shared/icons';
 import { Frame, Parsed, type ViewProps } from '../_shared/ViewRoot';
 
-export function QuoteContent({ data, dates, actions }: { data: Quote; dates: { from: WallTime; to: WallTime } | null; actions: Actions }) {
+type QuoteContentProps = {
+  data: Quote;
+  dates: { from: WallTime; to: WallTime } | null;
+  actions: Actions;
+  quoteArgs?: QuoteArguments | null;
+};
+
+export function QuoteContent({ data: initialData, dates: initialDates, actions, quoteArgs: initialArgs }: QuoteContentProps) {
+  const [current, setCurrent] = useState({ data: initialData, args: initialArgs ?? null });
+  const [requoting, setRequoting] = useState(false);
+  const [quoteFailed, setQuoteFailed] = useState(false);
+  const requestSequence = useRef(0);
+  const data = current.data;
+  const dates = datesFromArgs(current.args) ?? initialDates;
   const { t, locale, message } = useI18n();
   const c = data.currency;
   const m = (n: unknown, cur: unknown = c) => formatMoney(n, cur, locale) ?? t('notAvailable');
@@ -15,13 +28,42 @@ export function QuoteContent({ data, dates, actions }: { data: Quote; dates: { f
   const fastDate = fast ? parseWallTime(fast.remaining_charge_date) : null;
   const totalText = formatMoney(data.total, c, locale);
 
-  const [book, booking] = useAction(() =>
-    actions.sendMessage(
+  const [book, booking] = useAction(async () => {
+    if (requoting) return false;
+    if (current.args && !await actions.updateModelContext({
+      tool: 'get_vehicle_quote', arguments: current.args,
+      quote: { total: data.total, currency: data.currency, automatic_approval: data.automatic_approval },
+    })) return false;
+    return actions.sendMessage(
       dates
         ? message('msg.book', { from: formatWallDateTime(dates.from, locale), to: formatWallDateTime(dates.to, locale), tz, total: totalText ?? 'Price unavailable' })
         : message('msg.bookNoDates', { total: totalText ?? 'Price unavailable' }),
-    ),
-  );
+    );
+  });
+
+  const allOptions = [...(initialData.included_coverages ?? []), ...(initialData.available_coverages ?? []), ...(data.included_coverages ?? []), ...(data.available_coverages ?? [])];
+  const changeCoverage = async (type: string, selectedId: string) => {
+    if (!current.args || requoting) return;
+    const previous = current.args.covers ?? [];
+    const idsOfType = new Set(allOptions.filter((option) => option.type === type && option.id).map((option) => option.id));
+    if (previous.some((id) => !allOptions.some((option) => option.id === id))) { setQuoteFailed(true); return; }
+    const args = { ...current.args, covers: [...previous.filter((id) => !idsOfType.has(id)), selectedId] };
+    const sequence = ++requestSequence.current;
+    setRequoting(true);
+    setQuoteFailed(false);
+    try {
+      const result = await actions.callServerTool('get_vehicle_quote', args);
+      const parsed = result && !result.isError ? QuoteSchema.safeParse(result.structuredContent) : null;
+      if (sequence !== requestSequence.current) return;
+      if (parsed?.success) setCurrent({ data: parsed.data, args });
+      else setQuoteFailed(true);
+    } finally {
+      if (sequence === requestSequence.current) setRequoting(false);
+    }
+  };
+
+  const selectableOptions = Array.from(new Map(allOptions.filter((option) => option.id && option.type).map((option) => [option.id!, option])).values());
+  const coverageGroups = [...new Set(selectableOptions.map((option) => option.type!))];
 
   const totalSub = [
     typeof data.total_days === 'number' && data.price_per_day != null ? t('quote.totalSub', { days: data.total_days, perDay: m(data.price_per_day) }) : null,
@@ -74,17 +116,21 @@ export function QuoteContent({ data, dates, actions }: { data: Quote; dates: { f
 
         {data.available_coverages && data.available_coverages.length > 0 ? (
           <section className="rt-section">
-            <SectionHead title={t('quote.optional')} note={t('quote.optionalNote')} />
+            <SectionHead title={t('quote.optional')} note={t('quote.selectionNote')} />
+            {!current.args ? <Notice>{t('quote.missingArgs')}</Notice> : null}
+            {quoteFailed ? <Notice tone="err" role="alert">{t('quote.requoteFailed')}</Notice> : null}
+            {requoting ? <span role="status">{t('quote.requoting')}</span> : null}
             <div className="rt-tiles">
-              {data.available_coverages.map((x) => (
-                <div key={x.id} className="rt-option">
-                  <div className="rt-between">
-                    <span className="rt-option__name">{x.description ?? t('notAvailable')}</span>
-                    <span className="rt-price__amount">+ {m(x.price)}</span>
-                  </div>
+              {coverageGroups.map((type) => <fieldset key={type} className="rt-option" disabled={requoting || !current.args}>
+                <legend className="rt-small">{t(type === 'franchise_cover' ? 'quote.groupFranchise' : type === 'deposit_cover' ? 'quote.groupDeposit' : type === 'reserve_cover' ? 'quote.groupReserve' : 'quote.optional')}</legend>
+                {selectableOptions.filter((option) => option.type === type).map((x) => <label key={x.id} className="rt-option">
+                  <span className="rt-between">
+                    <span className="rt-row"><input type="radio" name={`coverage-${type}`} aria-label={x.description ?? t('notAvailable')} checked={(data.included_coverages ?? []).some((included) => included.id === x.id) || (current.args?.covers ?? []).includes(x.id!)} onChange={() => void changeCoverage(type, x.id!)} />{x.description ?? t('notAvailable')}</span>
+                    <span className="rt-price__amount">{m(x.price)}</span>
+                  </span>
                   {coverageMeta(x)}
-                </div>
-              ))}
+                </label>)}
+              </fieldset>)}
             </div>
           </section>
         ) : null}
@@ -127,7 +173,7 @@ export function QuoteContent({ data, dates, actions }: { data: Quote; dates: { f
           <span style={{ color: 'var(--rt-brand)', flex: 'none' }}>{data.automatic_approval === true ? <IconBolt size={18} /> : <IconClock size={18} />}</span>
           <span>{data.automatic_approval === true ? t('quote.autoApproval') : data.automatic_approval === false ? t('quote.needsApproval') : t('notAvailable')}</span>
         </div>
-        <Button block loading={booking} onClick={() => void book()}>{t('requestBooking')}</Button>
+        <Button block disabled={requoting || data.total == null} loading={booking} onClick={() => void book()}>{t('requestBooking')}</Button>
         <span className="rt-small" style={{ textAlign: 'center', marginTop: -6 }}>{t('quote.confirmInChat')}</span>
       </aside>
     </div>
@@ -136,11 +182,14 @@ export function QuoteContent({ data, dates, actions }: { data: Quote; dates: { f
 
 export function QuoteView({ view }: ViewProps) {
   const { t } = useI18n();
+  const input = QuoteArguments.safeParse(view.input);
+  const metaInput = input.success ? input : QuoteArguments.safeParse(view.result?._meta?.['rentennials/quote_args']);
   return (
     <Frame title={t('title.quote')} view={view}>
       <Parsed schema={QuoteSchema} result={view.result} isEmpty={(d) => d.breakdown.length === 0 && d.total == null} emptyTitle="noResults" emptyText="quote.empty">
-        {(data) => <QuoteContent key={view.receivedAt} data={data} dates={datesFromArgs(view.input)} actions={view.actions} />}
+        {(data) => <QuoteContent key={view.receivedAt} data={data} dates={datesFromArgs(view.input)} actions={view.actions} quoteArgs={metaInput.success ? metaInput.data : null} />}
       </Parsed>
     </Frame>
   );
 }
+import { useRef, useState } from 'react';

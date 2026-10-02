@@ -1,7 +1,7 @@
-import { useEffect, useState, type ButtonHTMLAttributes, type KeyboardEvent, type ReactNode } from 'react';
+import { useContext, useEffect, useState, type ButtonHTMLAttributes, type KeyboardEvent, type ReactNode } from 'react';
 import { useI18n } from './i18n';
 import { formatCountdown, formatWallDate, formatWallTime, timezoneLabel, type WallTime } from './format';
-import { safeImageUrl } from './safety';
+import { ImageOriginContext, safeImageUrl } from './safety';
 import {
   IconAlert, IconCar, IconChevronLeft, IconChevronRight, IconFlagEnd, IconFlagStart, IconInfo, IconTimer,
 } from './icons';
@@ -114,7 +114,8 @@ export function TotalPanel({ label, amount, sub }: { label: ReactNode; amount: R
 
 export function SafeImage({ src, alt }: { src: unknown; alt: string }) {
   const { t } = useI18n();
-  const safe = safeImageUrl(src);
+  const origins = useContext(ImageOriginContext);
+  const safe = safeImageUrl(src, origins);
   const [failed, setFailed] = useState(false);
   useEffect(() => setFailed(false), [safe]);
   if (!safe || failed) {

@@ -56,6 +56,7 @@ function Harness() {
     };
     bridge.onmessage = async (p: unknown) => { push('sendMessage', p); guard(); return {}; };
     bridge.onopenlink = async (p: unknown) => { push('openLink', p); guard(); return {}; };
+    bridge.onupdatemodelcontext = async (p: unknown) => { push('modelContext', p); guard(); return {}; };
     bridge.oncalltool = async (p: { name: string; arguments?: Record<string, unknown> }) => {
       push('callServerTool', p);
       guard();

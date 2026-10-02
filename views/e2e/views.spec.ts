@@ -15,6 +15,7 @@ test.beforeEach(async ({ page }) => {
     contentType: 'image/svg+xml',
     body: '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600"><rect width="800" height="600" fill="#eeeaf7"/><path d="M170 350v-70l65-100h290l90 100h30v70z" fill="#7B45F6"/><circle cx="250" cy="350" r="45" fill="#444"/><circle cx="555" cy="350" r="45" fill="#444"/><text x="400" y="480" text-anchor="middle" fill="#444" font-size="30">Synthetic demo image</text></svg>',
   }));
+  await page.route('https://images.example.com/**', (route) => route.fulfill({ contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600"><rect width="800" height="600" fill="#7B45F6"/></svg>' }));
 });
 
 async function open(page: Page, view: string, fixture: string, width: number, theme: string) {
@@ -65,6 +66,65 @@ test('quote · request booking goes through chat only', async ({ page }) => {
   await app.getByRole('button', { name: 'Solicitar reserva' }).click();
   await expect(page.locator('[data-kind="sendMessage"]')).toContainText('ask for my confirmation');
   await expect(page.locator('[data-kind="callServerTool"]')).toHaveCount(0);
+  await expect(page.locator('[data-kind="modelContext"]')).toContainText('"vehicle_id":"000000000000000000000001"');
+});
+
+test('shortlist expands only after explicit click', async ({ page }) => {
+  const { app } = await open(page, 'vehicle-results', 'ars', 706, 'light');
+  await expect(app.locator('article.rt-vcard')).toHaveCount(5);
+  await app.getByRole('button', { name: 'Ver más', exact: true }).click();
+  await expect(app.locator('article.rt-vcard')).toHaveCount(6);
+  await app.getByRole('button', { name: 'Ver menos', exact: true }).click();
+  await expect(app.locator('article.rt-vcard')).toHaveCount(5);
+});
+
+test('images follow runtime server policy with matching CSP', async ({ page }) => {
+  const { app, errors } = await open(page, 'vehicle-results', 'runtime', 706, 'light');
+  const image = app.locator('img').first();
+  await expect(image).toHaveAttribute('src', 'https://images.example.com/preview.webp');
+  await expect.poll(() => image.evaluate((element) => (element as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
+  expect(errors).toEqual([]);
+});
+
+test('detail uses localized labels and no doubled units', async ({ page }) => {
+  const { app } = await open(page, 'vehicle-detail', 'dates', 706, 'light');
+  await expect(app.getByText('5 puertas', { exact: true })).toBeVisible();
+  await expect(app.getByText('250 km/día', { exact: true })).toBeVisible();
+  await expect(app.getByText('Air conditioning', { exact: true })).toHaveCount(0);
+});
+
+test('detail loading stays compact', async ({ page }) => {
+  await page.goto('/?view=vehicle-detail&fixture=dates&hold=1');
+  await expect(page.getByTestId('sandbox')).toHaveAttribute('data-ready', 'true');
+  const app = page.frameLocator('[data-testid="sandbox"]').frameLocator('iframe');
+  await expect(app.getByText('Cargando', { exact: true })).toBeVisible();
+  await expect(app.locator('.rt-media.rt-skel')).toHaveCount(0);
+});
+
+test('coverage selection requotes and preserves other types before chat confirmation', async ({ page }) => {
+  const { app } = await open(page, 'quote', 'fast', 706, 'light');
+  await app.getByRole('radio', { name: 'Cobertura Premium', exact: true }).click();
+  await expect(app.getByRole('radio', { name: 'Cobertura Premium', exact: true })).toBeChecked();
+  await expect(app.locator('.rt-total__amount')).toContainText('233.650');
+  await app.getByRole('radio', { name: 'Depósito sin tarjeta', exact: true }).click();
+  await expect(app.getByRole('radio', { name: 'Depósito sin tarjeta', exact: true })).toBeChecked();
+  await expect(app.locator('.rt-total__amount')).toContainText('268.650');
+  await app.getByRole('button', { name: 'Solicitar reserva', exact: true }).click();
+  await expect(page.locator('[data-kind="modelContext"]')).toContainText('cov_fx_1');
+  await expect(page.locator('[data-kind="modelContext"]')).toContainText('cov_deposit_cash');
+  await expect(page.locator('[data-kind="modelContext"]')).toContainText('268650');
+  const calls = await page.locator('[data-kind="callServerTool"]').allTextContents();
+  expect(calls.length).toBeGreaterThan(0);
+  expect(calls.join(' ')).not.toContain('create_booking_request');
+});
+
+test('coverage failure rolls back selection and total', async ({ page }) => {
+  const { app } = await open(page, 'quote', 'fast', 706, 'light');
+  await page.getByTestId('fail-actions').check();
+  await app.getByRole('radio', { name: 'Cobertura Premium', exact: true }).click();
+  await expect(app.getByRole('radio', { name: 'Cobertura Premium', exact: true })).not.toBeChecked();
+  await expect(app.locator('.rt-total__amount')).toContainText('174.650');
+  await expect(app.getByText('No se pudo actualizar la cotización.', { exact: false })).toBeVisible();
 });
 
 test('booking-confirmation · pay opens link only after click', async ({ page }) => {

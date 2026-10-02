@@ -14,7 +14,7 @@ import { BookingDetailContent, BookingListContent, canPay } from './my-bookings/
 import * as fx from '../fixtures';
 import { parseWallTime } from './_shared/format';
 
-const actions: Actions = { callServerTool: vi.fn(async () => null), sendMessage: vi.fn(async () => true), openLink: vi.fn(async () => true) };
+const actions: Actions = { callServerTool: vi.fn(async () => null), sendMessage: vi.fn(async () => true), openLink: vi.fn(async () => true), updateModelContext: vi.fn(async () => true) };
 const render = (el: ReactElement, locale = 'es-AR') => renderToStaticMarkup(<I18nProvider hostLocale={locale}>{el}</I18nProvider>);
 const dates = { from: parseWallTime('2026-10-02T18:00')!, to: parseWallTime('2026-10-04T18:00')! };
 
@@ -47,10 +47,13 @@ describe('vehicle-results', () => {
     expect(html).not.toContain('http://photos.rentennials.app');
     expect(html).not.toContain('evil.example.com');
     expect(html).toContain('Imagen no disponible');
-    expect(html).toContain('0,0');
+    const zero = render(<VehicleResultsContent data={SearchVehiclesResult.parse({ ...fx.searchResult, vehicles: [fx.searchResult.vehicles[5]] })} actions={actions} />);
+    expect(zero).toContain('0,0');
   });
   it('wraps long names and never shows ids or slugs', () => {
-    expect(html).toContain('nombre de publicación muy largo');
+    expect(html).not.toContain('nombre de publicación muy largo');
+    const long = render(<VehicleResultsContent data={SearchVehiclesResult.parse({ ...fx.searchResult, vehicles: [fx.searchResult.vehicles[5]] })} actions={actions} />);
+    expect(long).toContain('nombre de publicación muy largo');
     expect(html).not.toMatch(/veh_fx_|vehicle-fx-/);
   });
   it('renders USD in English', () => {
@@ -88,7 +91,7 @@ describe('quote', () => {
     expect(html.indexOf('Alquiler')).toBeLessThan(html.indexOf('Rentennials Cover'));
     expect(html).toMatch(/ARS\s174\.650/);
     expect(html).toContain('Rentennials Fast disponible');
-    expect(html).toContain('No están sumadas al total');
+    expect(html).toContain('El total se actualiza con una nueva cotización');
     expect(html).toMatch(/2 u\. · ARS\s18\.000/);
     expect(html).not.toContain('type="checkbox"');
   });

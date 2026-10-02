@@ -6,6 +6,7 @@ import { useMcpApp, type McpView, type ToolResult } from '../_bridge/useMcpApp';
 import { I18nProvider, useI18n, type TranslationKey } from './i18n';
 import { Isotipo, IconAlert, IconPlug, IconQuestion, IconSearch, IconStop } from './icons';
 import { Notice, Skeleton, StateMessage } from './components';
+import { IMAGE_ORIGINS, ImageOriginContext } from './safety';
 
 export type ViewProps = { view: McpView };
 
@@ -13,18 +14,21 @@ export function mountView(name: string, View: ComponentType<ViewProps>) {
   function Host() {
     const view = useMcpApp(name);
     return (
-      <I18nProvider hostLocale={view.hostContext.locale}>
+      <ImageOriginContext.Provider value={view.imageOrigins ?? IMAGE_ORIGINS}><I18nProvider hostLocale={view.hostContext.locale}>
         <View view={view} />
-      </I18nProvider>
+      </I18nProvider></ImageOriginContext.Provider>
     );
   }
   createRoot(document.getElementById('root')!).render(<Host />);
 }
 
-export function Frame({ title, view, skeletons = 1, children }: { title: string; view: McpView; skeletons?: number; children?: ReactNode }) {
+export function Frame({ title, view, skeletons = 1, compactLoading = false, children }: { title: string; view: McpView; skeletons?: number; compactLoading?: boolean; children?: ReactNode }) {
   const { t } = useI18n();
   let body: ReactNode = children;
-  if (view.phase === 'connecting' || view.phase === 'waiting') body = <Skeleton count={skeletons} />;
+  if (view.phase === 'connecting' || view.phase === 'waiting') {
+    if (compactLoading && !view.input) return null;
+    body = compactLoading ? <span className="rt-small" role="status">{t('state.loading')}</span> : <Skeleton count={skeletons} />;
+  }
   if (view.phase === 'error') body = <StateMessage role="alert" icon={<IconAlert size={24} />} title={t('state.error.title')} text={t('state.error.text')} />;
   if (view.phase === 'cancelled') body = <StateMessage icon={<IconStop size={24} />} title={t('state.cancelled.title')} text={t('state.cancelled.text')} />;
   if (view.phase === 'disconnected') body = <StateMessage role="alert" icon={<IconPlug size={24} />} title={t('state.disconnected.title')} text={t('state.disconnected.text')} />;

@@ -3,6 +3,7 @@ export type Csp = { connectDomains?: string[]; resourceDomains?: string[]; frame
 export const RESOURCE_DOMAINS = [
   'https://photos.rentennials.app',
   'https://api.rentennials.app',
+  'https://images.example.com',
   ...String(import.meta.env.VITE_MCP_UI_IMAGE_HOSTS ?? '').split(',').map((s) => s.trim()).filter(Boolean),
 ];
 
