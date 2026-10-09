@@ -9,14 +9,15 @@ import { Frame, Parsed, type ViewProps } from '../_shared/ViewRoot';
 import { VehicleDetail as VehicleDetailSchema } from '../_shared/contracts';
 import { datesFromArgs } from '../_shared/format';
 import { featureLabel, specValue, SUMMARY_FEATURE_KEYS } from '../_shared/features';
+import { vehicleTitle } from '../_shared/vehicle';
 
 const KNOWN_WARNINGS = ['images_invalid', 'disclaimer_truncated', 'features_invalid'];
 
 export function VehicleDetailContent({
-  data, dates, actions,
-}: { data: VehicleDetail; dates: { from: WallTime; to: WallTime } | null; actions: Actions }) {
+  data, dates, actions, onQuote, quoting: externalQuoting,
+}: { data: VehicleDetail; dates: { from: WallTime; to: WallTime } | null; actions: Actions; onQuote?: () => void; quoting?: boolean }) {
   const { t, locale, lang, message } = useI18n();
-  const title = data.year ? `${data.name} ${data.year}` : data.name;
+  const title = vehicleTitle(data);
   const warnings = data.content_warnings ?? [];
   const features = data.features ?? [];
   const enabled = features.filter((f) => f.value === 'true');
@@ -33,7 +34,7 @@ export function VehicleDetailContent({
     data.kms_per_day != null ? { icon: <IconRoad size={24} />, label: specValue('kms_per_day', data.kms_per_day, lang) } : null,
   ].filter((s): s is { icon: ReactElement; label: string } => s !== null);
 
-  const [quote, quoting] = useAction(() =>
+  const [quote, quoting] = useAction(() => onQuote ? Promise.resolve(onQuote()) :
     actions.sendMessage(
       dates
         ? message('msg.quoteNoCity', { vehicle: title, from: formatWallDateTime(dates.from, locale), to: formatWallDateTime(dates.to, locale), tz })
@@ -84,7 +85,7 @@ export function VehicleDetailContent({
           ) : null}
           {dates ? <DateBlock from={dates.from} to={dates.to} timezone={data.timezone} caption={t('detail.searchDates')} /> : null}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <Button block loading={quoting} onClick={() => void quote()}>{t('getQuote')}</Button>
+          <Button block loading={quoting || externalQuoting} onClick={() => void quote()}>{t('getQuote')}</Button>
             <span className="rt-small" style={{ textAlign: 'center' }}>{dates ? t('detail.quoteWithDates') : t('detail.quoteAskDates')}</span>
           </div>
         </div>

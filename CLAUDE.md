@@ -8,6 +8,22 @@
 
 ## Snapshot
 
+### Cotización integrada · implementación local 2026-10-09
+
+Views 1.0.2 preparadas, sin publicar. Resultados abre detalle/quote por lectura
+del bridge en el mismo widget. Quote muestra identidad/foto y permite editar
+fechas, horarios, extras/cantidades, puntos, cupón y covers; separa borrador de
+cotización aplicada. Reserva bloqueada mientras hay cambios pendientes y
+handoff al modelo para recotizar con todos los argumentos antes de confirmar.
+Orden visible: ranking de plataforma por defecto, tarifa diaria asc/desc,
+rating o reservas. Cambiar orden consulta el servidor conservando filtros.
+La allowlist incorpora también metadata de lecturas locales; requiere que el
+servidor y el host permitan el origen. Los 404 no se arreglan desde la view.
+El change primario vive en mcp-api/specs/changes/mcp-quote-workspace/.
+Validado: lint/tipos, 50 Vitest, build y 53 Playwright. Capturas sintéticas de
+harness regeneradas; no equivalen a ejecución real en ChatGPT. Sin nuevas
+dependencias, commits, instalación ni publicación de tags.
+
 Repo público de presentación y publicación de integraciones. Setup workspaces,
 configs, manifiestos/validador OpenAI y tres workflows implementados. Stack:
 Node 22 >=22.12, Yarn 1, TypeScript strict y React 19. Dependencias instaladas

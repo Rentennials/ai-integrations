@@ -116,6 +116,7 @@ export function useMcpApp(viewName: string): McpView {
       if (!app) return fail(), null;
       try {
         const result = (await app.callServerTool({ name, arguments: args })) as ToolResult;
+        setState((s) => ({ ...s, imageOrigins: [...new Set([...s.imageOrigins, ...declaredImageOrigins(app.getHostCapabilities()?.sandbox?.csp?.resourceDomains), ...declaredImageOrigins(result._meta?.['rentennials/image_origins'])])] }));
         clear();
         return result;
       } catch {

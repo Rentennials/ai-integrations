@@ -76,6 +76,14 @@ fija el endpoint productivo y no incluye `.app.json` ni credenciales.
 
 ## Estado y pendientes
 
+Actualización local 2026-10-09: views 1.0.2 preparadas con navegación
+listado/detalle/cotización dentro del widget, foto del vehículo, orden visible
+y editor de fechas, horarios, extras, puntos, cupón y coberturas. El precio
+se actualiza en el servidor y la reserva se confirma en el chat después de una
+recotización del modelo. Publicación y verificación real posteriores pendientes.
+Lint/tipos, 50 tests Vitest, build y 53 Playwright pasan. Capturas regeneradas
+con datos sintéticos; todavía no son evidencia de ChatGPT real.
+
 Setup, cinco pantallas, fixtures/tests/harness y workflows implementados.
 Lint, typecheck, 47 tests Vitest, build y 39 tests Playwright pasan con Node 22.
 El árbol de distribución se validó en dry-run; el tag público aún está pendiente.

@@ -10,7 +10,7 @@ const fail = { content: [{ type: 'text' as const, text: 'Synthetic server error.
 const MZA = 'America/Argentina/Mendoza';
 const PHOTOS = 'https://photos.rentennials.app/fixtures';
 
-const ctx = { country: 'Argentina', region: 'Mendoza', from_date: '2026-10-02', from_date_time: '18:00', to_date: '2026-10-04', to_date_time: '18:00' };
+const ctx = { country: 'Argentina', region: 'Mendoza', from_date: '2026-10-02', from_date_time: '18:00', to_date: '2026-10-04', to_date_time: '18:00', sort: 'default' };
 
 const vehicle = (n: number, over: Record<string, unknown>) => ({
    id: String(n).padStart(24, '0'), slug: `vehicle-fx-${n}`, name: 'Vehículo', year: '2022', image_url: `${PHOTOS}/v${n}.jpg`,
@@ -55,8 +55,8 @@ export const vehicleDetail = {
   ],
   meeting_points: [
     { id: 'mp_fx_1', name: 'A coordinar con el anfitrión', type: 'PICKUP', price: 0 },
-    { id: 'mp_fx_2', name: 'Aeropuerto El Plumerillo', type: 'PICKUP', price: 12000 },
-    { id: 'mp_fx_3', name: 'Terminal de ómnibus', type: 'RETURN', price: 8000 },
+    { id: 'mp_fx_2', location_id: '000000000000000000000101', name: 'Aeropuerto El Plumerillo', type: 'PICKUP', price: 12000 },
+    { id: 'mp_fx_3', location_id: '000000000000000000000102', name: 'Terminal de ómnibus', type: 'RETURN', price: 8000 },
   ],
   passengers: '5', transmission: 'Manual', fuel: 'Nafta', doors: '5 Puertas', kms_per_day: '250 kms', timezone: MZA, currency: 'ARS',
   guarantee_deposit: 620000, guarantee_deposit_currency: 'ARS', deductible: 155000, content_warnings: [],
@@ -71,6 +71,9 @@ export const vehicleDetailWarnings = {
 };
 
 export const quote = {
+  vehicle: { id: vehicleDetail.id, slug: vehicleDetail.slug, name: vehicleDetail.name, year: vehicleDetail.year, image_url: vehicleDetail.image_urls[0], country: 'Argentina', timezone: MZA },
+  availability: 'available',
+  meeting_points: { pickup: vehicleDetail.meeting_points.filter((point) => point.type === 'PICKUP'), return: vehicleDetail.meeting_points.filter((point) => point.type === 'RETURN') },
   breakdown: [
     { concept: 'daily_price', description: 'Alquiler · Tarifa diaria', unit_amount: 80000, quantity: 2, amount: 160000 },
     { concept: 'rentennials_cover', description: 'Rentennials Cover · Cancelación flexible', unit_amount: 2990, quantity: 1, amount: 2990 },
@@ -150,7 +153,9 @@ const quoteInput = { vehicle_id: '000000000000000000000001', from_date: '2026-10
 export const fixtures: Record<string, Record<string, Fixture>> = {
   'vehicle-results': {
     runtime: { label: 'Origen dinámico', tool: 'search_vehicles', input: {}, result: { ...ok({ ...searchResult, vehicles: [{ ...searchResult.vehicles[0], image_url: 'https://images.example.com/preview.webp' }] }), _meta: { 'rentennials/image_origins': ['https://images.example.com'] } } },
-    ars: { label: 'ARS · 6 autos', tool: 'search_vehicles', input: {}, result: ok(searchResult) },
+    resultOrigins: { label: 'Política en lectura local', tool: 'search_vehicles', input: ctx, result: ok({ ...searchResult, vehicles: [{ ...searchResult.vehicles[0], slug: 'vehicle-fx-runtime' }] }) },
+    ars: { label: 'ARS · 6 autos', tool: 'search_vehicles', input: ctx, result: ok(searchResult) },
+    airport: { label: 'Aeropuerto · filtros', tool: 'search_vehicles', input: { ...ctx, pickup_location_id: '000000000000000000000101', return_location_id: '000000000000000000000102', has_deposit_cover: true }, result: ok(searchResult) },
     usd: { label: 'USD', tool: 'search_vehicles', input: {}, result: ok(searchResultUsd) },
     empty: { label: 'Vacío', tool: 'search_vehicles', input: {}, result: ok({ ...searchResult, vehicles: [], total_count: 0, has_more: false }) },
     error: { label: 'isError', tool: 'search_vehicles', input: {}, result: fail },
@@ -186,7 +191,15 @@ export const fixtures: Record<string, Record<string, Fixture>> = {
 };
 
 export const serverTools: Record<string, (args: Record<string, unknown>) => Fixture['result']> = {
-  get_vehicle: (args) => (args.slug === 'vehicle-fx-1' ? ok(vehicleDetail) : ok(vehicleDetailWarnings)),
+  search_vehicles: (args) => {
+    const vehicles = [...searchResult.vehicles];
+    if (args.sort === 'lower_price') vehicles.sort((a, b) => Number(a.price_per_day) - Number(b.price_per_day));
+    if (args.sort === 'higher_price') vehicles.sort((a, b) => Number(b.price_per_day) - Number(a.price_per_day));
+    return ok({ ...searchResult, vehicles: vehicles.slice(0, Number(args.limit ?? 5)), limit: args.limit ?? 5, search_context: { ...ctx, sort: args.sort ?? 'default' } });
+  },
+  get_vehicle: (args) => args.slug === 'vehicle-fx-runtime'
+    ? { ...ok({ ...vehicleDetail, image_urls: ['https://images.example.com/detail.webp'] }), _meta: { 'rentennials/image_origins': ['https://images.example.com'] } }
+    : (args.slug === 'vehicle-fx-1' ? ok(vehicleDetail) : ok(vehicleDetailWarnings)),
   get_booking: () => ok(bookingDetail),
   get_vehicle_quote: (args) => {
     const requested = Array.isArray(args.covers) ? args.covers : [];
@@ -197,7 +210,20 @@ export const serverTools: Record<string, (args: Record<string, unknown>) => Fixt
       if (!option) return fail;
       selected.set(option.type, option);
     }
-    const extra = [...selected.values()].reduce((sum, cover) => sum + cover.price, 0);
+    let extra = [...selected.values()].reduce((sum, cover) => sum + cover.price, 0);
+    for (const service of (args.extra_services ?? []) as { key: string; quantity?: number }[]) {
+      const offered = quote.available_extras.find((item) => item.key === service.key);
+      if (!offered || (service.quantity ?? 1) > offered.price_by_quantity.length) return fail;
+      extra += offered.price_by_quantity[(service.quantity ?? 1) - 1];
+    }
+    for (const leg of ['pickup', 'return'] as const) {
+      const id = args[leg === 'pickup' ? 'pickup_meeting_point_id' : 'return_meeting_point_id'];
+      if (!id) continue;
+      const point = quote.meeting_points[leg].find((item) => item.id === id);
+      if (!point) return fail;
+      extra += point.price;
+    }
+    if (args.coupon === 'INVALID') return fail;
     return ok({ ...quote, included_coverages: [...selected.values()], total: quote.total + extra });
   },
 };

@@ -54,6 +54,26 @@ pendientes. No marcar verificación en ChatGPT/Codex real por probar el harness.
 
 ## 1. Contrato de una view
 
+### Ajuste aprobado · cotización integrada (2026-10-09)
+
+Esta sección prevalece sobre los controles informativos y acciones de cotizar
+por chat de la entrega inicial. Listado abre detalle/quote dentro del widget,
+por lecturas del bridge; Volver conserva listado y cotizaciones aplicadas.
+Quote incluye identidad/foto, fechas/horas editables, extras con cantidades,
+puntos de retiro/devolución, cupón y una cobertura por tipo. Selección visible,
+precio de referencia y aviso de cambios sin aplicar; precio final solo de tool.
+Actualizar cotización aplica el borrador; error conserva precio anterior sin
+permitir reserva con opciones nuevas pendientes. Solicitar reserva manda al
+modelo los argumentos completos para que recotice y pida confirmación antes de
+escribir. No se crea ninguna reserva desde la UI.
+Orden por defecto Relevancia de la plataforma, nunca una recomendación personal;
+menor/mayor tarifa diaria no garantiza el menor/mayor total del viaje. Cambiar
+orden vuelve a consultar conservando filtros. Puntos globales y por vehículo
+se asocian por identidad real, no por nombre o similitud de IDs.
+Origen de imágenes declarado por servidor/host también en lecturas locales;
+HTTPS y CSP exactos. Un 404 conserva fallback. Configuración de ambiente fuera
+del repo público. Se preservan las cinco URI y los clientes sin UI.
+
 Cada recurso `ui://rentennials/<view>` es un HTML5 autocontenido con JavaScript,
 CSS y assets de marca inline. MIME: `text/html;profile=mcp-app`. Se ejecuta en
 un iframe sandbox del host, con `App` de `@modelcontextprotocol/ext-apps`.

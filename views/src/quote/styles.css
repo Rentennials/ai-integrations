@@ -1,0 +1,17 @@
+.rt-workspace { display: flex; flex-direction: column; gap: 16px; }
+.rt-workspace > button { align-self: flex-start; }
+.rt-quote-vehicle { display: flex; align-items: center; gap: 16px; padding: 12px; }
+.rt-quote-vehicle__image { width: 112px; height: 84px; flex: none; overflow: hidden; border-radius: 12px; position: relative; background: var(--rt-aux); }
+.rt-quote-vehicle__image img { width: 100%; height: 100%; object-fit: cover; }
+.rt-quote-vehicle__image .rt-small { font-size: 10px; }
+.rt-quote-editor { display: flex; flex-direction: column; gap: 12px; padding: 16px; }
+.rt-edit-fields { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; border: 0; padding: 0; margin: 0; min-width: 0; }
+.rt-edit-fields label, .rt-edit-label { display: flex; flex-direction: column; gap: 6px; min-width: 0; font-size: 13px; }
+.rt-edit-fields__wide { grid-column: 1 / -1; }
+.rt-edit-fields input, .rt-edit-label select { box-sizing: border-box; width: 100%; min-width: 0; max-width: 100%; padding: 10px; border: 1px solid var(--rt-divider); border-radius: 10px; background: var(--rt-surface); color: var(--rt-text); font: inherit; }
+.rt-edit-fields input:focus-visible, .rt-edit-label select:focus-visible { outline: 2px solid var(--rt-brand); outline-offset: 2px; }
+.rt-edit-fields input:disabled, .rt-edit-label select:disabled { opacity: .6; }
+.rt-coverage-choice { cursor: pointer; margin-top: 8px; transition: border-color .15s; }
+.rt-coverage-choice[data-selected="true"] { border-color: var(--rt-brand); background: var(--rt-tint); }
+.rt-coverage-choice input { accent-color: var(--rt-brand); flex: none; }
+@media (max-width: 400px) { .rt-quote-vehicle__image { width: 84px; height: 72px; } }

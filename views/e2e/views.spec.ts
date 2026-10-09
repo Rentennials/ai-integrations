@@ -51,20 +51,23 @@ for (const [view, fixture] of Object.entries(VIEWS)) {
   }
 }
 
-test('vehicle-results · quote sends a message and detail calls get_vehicle', async ({ page }) => {
+test('vehicle-results · quote opens locally and detail calls get_vehicle', async ({ page }) => {
   const { app } = await open(page, 'vehicle-results', 'ars', 706, 'light');
   await app.getByRole('button', { name: 'Cotizar' }).first().click();
-  await expect(page.locator('[data-kind="sendMessage"]')).toContainText("I'd like a quote for the Renault Kwid 2018");
-  await expect(page.locator('[data-kind="sendMessage"]')).not.toContainText('veh_fx_');
+  await expect(page.locator('[data-kind="sendMessage"]')).toHaveCount(0);
+  await expect(app.getByRole('button', { name: 'Solicitar reserva' })).toBeVisible();
+  await expect(app.getByRole('heading', { name: 'Renault Kwid 2018', exact: true })).toBeVisible();
+  await app.getByRole('button', { name: 'Volver al listado' }).click();
   await app.getByRole('button', { name: 'Ver detalle' }).first().click();
-  await expect(page.locator('[data-kind="callServerTool"]')).toContainText('"name":"get_vehicle"');
+  expect((await page.locator('[data-kind="callServerTool"]').allTextContents()).join(' ')).toContain('"name":"get_vehicle"');
   await expect(app.getByRole('heading', { name: 'Características principales' })).toBeVisible();
 });
 
 test('quote · request booking goes through chat only', async ({ page }) => {
   const { app } = await open(page, 'quote', 'fast', 706, 'light');
   await app.getByRole('button', { name: 'Solicitar reserva' }).click();
-  await expect(page.locator('[data-kind="sendMessage"]')).toContainText('ask for my confirmation');
+  await expect(page.locator('[data-kind="sendMessage"]')).toContainText('ask for my explicit confirmation');
+  await expect(page.locator('[data-kind="sendMessage"]')).toContainText('First call get_vehicle_quote yourself');
   await expect(page.locator('[data-kind="callServerTool"]')).toHaveCount(0);
   await expect(page.locator('[data-kind="modelContext"]')).toContainText('"vehicle_id":"000000000000000000000001"');
 });
@@ -83,6 +86,16 @@ test('images follow runtime server policy with matching CSP', async ({ page }) =
   const image = app.locator('img').first();
   await expect(image).toHaveAttribute('src', 'https://images.example.com/preview.webp');
   await expect.poll(() => image.evaluate((element) => (element as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
+  expect(errors).toEqual([]);
+});
+
+test('local read updates image allowlist without a new chat panel', async ({ page }) => {
+  const { app, errors } = await open(page, 'vehicle-results', 'resultOrigins', 706, 'light');
+  await app.getByRole('button', { name: 'Ver detalle', exact: true }).click();
+  const image = app.locator('.rt-gallery__stage img');
+  await expect(image).toHaveAttribute('src', 'https://images.example.com/detail.webp');
+  await expect.poll(() => image.evaluate((element) => (element as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
+  await expect(page.locator('[data-kind="sendMessage"]')).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 
@@ -125,6 +138,93 @@ test('coverage failure rolls back selection and total', async ({ page }) => {
   await expect(app.getByRole('radio', { name: 'Cobertura Premium', exact: true })).not.toBeChecked();
   await expect(app.locator('.rt-total__amount')).toContainText('174.650');
   await expect(app.getByText('No se pudo actualizar la cotización.', { exact: false })).toBeVisible();
+});
+
+test('quote editor applies extras and both meeting points before chat confirmation', async ({ page }) => {
+  const { app } = await open(page, 'quote', 'fast', 706, 'light');
+  await app.getByLabel('Silla de bebé (0 a 3 años)', { exact: true }).selectOption('2');
+  await app.getByLabel('Retiro', { exact: true }).selectOption('mp_fx_2');
+  await app.getByLabel('Devolución', { exact: true }).selectOption('mp_fx_3');
+  await expect(app.getByRole('button', { name: 'Solicitar reserva', exact: true })).toBeDisabled();
+  await expect(app.locator('.rt-total__amount')).toContainText('174.650');
+  await app.getByRole('button', { name: 'Actualizar cotización', exact: true }).click();
+  await expect(app.locator('.rt-total__amount')).toContainText('212.650');
+  await expect(app.getByRole('button', { name: 'Solicitar reserva', exact: true })).toBeEnabled();
+  await app.getByRole('button', { name: 'Solicitar reserva', exact: true }).click();
+  await expect(page.locator('[data-kind="modelContext"]')).toContainText('"quantity":2');
+  await expect(page.locator('[data-kind="sendMessage"]')).toContainText('mp_fx_2');
+  await expect(page.locator('[data-kind="sendMessage"]')).toContainText('mp_fx_3');
+  expect((await page.locator('[data-kind="callServerTool"]').allTextContents()).join(' ')).not.toContain('create_booking_request');
+});
+
+test('quote editor validates dates and preserves applied quote after coupon failure', async ({ page }) => {
+  const { app } = await open(page, 'quote', 'fast', 706, 'light');
+  await app.getByLabel('Fecha de devolución', { exact: true }).fill('2026-10-01');
+  await app.getByRole('button', { name: 'Actualizar cotización', exact: true }).click();
+  await expect(app.getByRole('alert')).toContainText('Revisá las fechas');
+  await expect(page.locator('[data-kind="callServerTool"]')).toHaveCount(0);
+  await app.getByRole('button', { name: 'Descartar cambios' }).click();
+  await app.getByLabel('Cupón de descuento', { exact: true }).fill('INVALID');
+  await app.getByRole('button', { name: 'Actualizar cotización', exact: true }).click();
+  await expect(app.getByRole('alert')).toContainText('No se pudo actualizar la cotización');
+  await expect(app.locator('.rt-total__amount')).toContainText('174.650');
+  await expect(app.getByRole('button', { name: 'Solicitar reserva', exact: true })).toBeDisabled();
+  await app.getByRole('button', { name: 'Descartar cambios' }).click();
+  await expect(app.getByRole('button', { name: 'Solicitar reserva', exact: true })).toBeEnabled();
+});
+
+test('date and time edits preserve selected extras and reach the server', async ({ page }) => {
+  const { app } = await open(page, 'quote', 'fast', 706, 'light');
+  await app.getByLabel('Fecha de retiro', { exact: true }).fill('2026-11-10');
+  await app.getByLabel('Fecha de devolución', { exact: true }).fill('2026-11-14');
+  await app.getByLabel('Hora de retiro', { exact: true }).fill('09:30');
+  await app.getByLabel('Hora de devolución', { exact: true }).fill('17:00');
+  await app.getByLabel('Cadenas para la nieve', { exact: true }).selectOption('1');
+  await app.getByRole('button', { name: 'Actualizar cotización', exact: true }).click();
+  await expect(page.locator('[data-kind="callServerTool"]')).toContainText('"from_date":"2026-11-10"');
+  await expect(page.locator('[data-kind="callServerTool"]')).toContainText('"from_date_time":"09:30"');
+  await expect(page.locator('[data-kind="callServerTool"]')).toContainText('snow_chains');
+});
+
+test('search order requeries and keeps airport and no-card filters', async ({ page }) => {
+  const { app } = await open(page, 'vehicle-results', 'airport', 706, 'light');
+  await app.getByLabel('Ordenar por', { exact: true }).selectOption('lower_price');
+  await expect(page.locator('[data-kind="callServerTool"]')).toContainText('"sort":"lower_price"');
+  await expect(page.locator('[data-kind="callServerTool"]')).toContainText('"has_deposit_cover":true');
+  await expect(page.locator('[data-kind="callServerTool"]')).toContainText('"pickup_location_id":"000000000000000000000101"');
+  await expect(app.getByLabel('Ordenar por', { exact: true })).toHaveValue('lower_price');
+  await expect(page.locator('[data-kind="sendMessage"]')).toHaveCount(0);
+});
+
+test('airport search maps global locations to vehicle points when quoting locally', async ({ page }) => {
+  const { app } = await open(page, 'vehicle-results', 'airport', 706, 'light');
+  await app.getByRole('button', { name: 'Cotizar', exact: true }).first().click();
+  await expect(app.getByLabel('Retiro', { exact: true })).toHaveValue('mp_fx_2');
+  await expect(app.getByLabel('Devolución', { exact: true })).toHaveValue('mp_fx_3');
+  expect((await page.locator('[data-kind="callServerTool"]').allTextContents()).join(' ')).toContain('"pickup_meeting_point_id":"mp_fx_2"');
+  await expect(page.locator('[data-kind="sendMessage"]')).toHaveCount(0);
+});
+
+test('local quote preserves applied changes after returning to results', async ({ page }) => {
+  const { app } = await open(page, 'vehicle-results', 'ars', 706, 'light');
+  await app.getByRole('button', { name: 'Cotizar', exact: true }).first().click();
+  await app.getByLabel('Silla de bebé (0 a 3 años)', { exact: true }).selectOption('1');
+  await app.getByRole('button', { name: 'Actualizar cotización', exact: true }).click();
+  await expect(app.locator('.rt-total__amount')).toContainText('184.650');
+  await app.getByRole('button', { name: 'Volver al listado' }).click();
+  await expect(app.locator('article.rt-vcard')).toHaveCount(5);
+  await app.getByRole('button', { name: 'Cotizar', exact: true }).first().click();
+  await expect(app.getByLabel('Silla de bebé (0 a 3 años)', { exact: true })).toHaveValue('1');
+  await expect(app.locator('.rt-total__amount')).toContainText('184.650');
+});
+
+test('coverage can return to the included default', async ({ page }) => {
+  const { app } = await open(page, 'quote', 'fast', 706, 'light');
+  await app.getByRole('radio', { name: 'Cobertura Premium', exact: true }).click();
+  await expect(app.locator('.rt-total__amount')).toContainText('233.650');
+  await app.getByRole('radio', { name: 'Cobertura básica', exact: true }).click();
+  await expect(app.locator('.rt-total__amount')).toContainText('174.650');
+  await expect(app.getByRole('radio', { name: 'Cobertura básica', exact: true })).toBeChecked();
 });
 
 test('booking-confirmation · pay opens link only after click', async ({ page }) => {
