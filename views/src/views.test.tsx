@@ -87,13 +87,19 @@ describe('vehicle-detail', () => {
 
 describe('quote', () => {
   it('keeps server order, discount once and separates totals', () => {
-    const html = render(<QuoteContent data={Quote.parse(fx.quote)} dates={dates} actions={actions} />);
+    const html = render(<QuoteContent data={Quote.parse({ ...fx.quote, breakdown: [...fx.quote.breakdown,
+      { concept: 'hour', description: 'Fracción horaria', unit_amount: null, quantity: 5, amount: 42 },
+      { concept: 'baby_chair', description: 'Extra acumulado', unit_amount: null, quantity: 2, amount: 18000 },
+    ] })} dates={dates} actions={actions} />);
     expect(html.indexOf('Alquiler')).toBeLessThan(html.indexOf('Rentennials Cover'));
     expect(html).toMatch(/ARS\s174\.650/);
     expect(html).toContain('Rentennials Fast disponible');
     expect(html).toContain('El total se actualiza con una nueva cotización');
     expect(html).toMatch(/2 u\. · ARS\s18\.000/);
     expect(html).not.toContain('type="checkbox"');
+    expect(html).toContain('Fracción horaria');
+    expect(html).not.toMatch(/5 × ARS\s42/);
+    expect(html).not.toMatch(/2 × ARS\s18\.000/);
   });
   it('treats payment_fast null as unavailable', () => {
     const html = render(<QuoteContent data={Quote.parse(fx.quoteNoFast)} dates={null} actions={actions} />);

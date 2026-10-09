@@ -54,6 +54,8 @@ function Harness() {
     const guard = () => {
       if (failRef.current) throw new Error('Simulated host failure');
     };
+    let quoteReads = 0;
+    const firstQuoteDelay = Math.min(3000, Math.max(0, Number(params.get('firstQuoteDelay')) || 0));
     bridge.onmessage = async (p: unknown) => { push('sendMessage', p); guard(); return {}; };
     bridge.onopenlink = async (p: unknown) => { push('openLink', p); guard(); return {}; };
     bridge.onupdatemodelcontext = async (p: unknown) => { push('modelContext', p); guard(); return {}; };
@@ -62,7 +64,12 @@ function Harness() {
       guard();
       const handler = serverTools[p.name];
       if (!handler) throw new Error(`Tool ${p.name} is not available to the app`);
-      return handler(p.arguments ?? {});
+      if (p.name === 'get_vehicle_quote' && ++quoteReads === 1 && firstQuoteDelay) {
+        await new Promise((resolve) => setTimeout(resolve, firstQuoteDelay));
+      }
+      const result = handler(p.arguments ?? {});
+      push('callServerToolEnd', p);
+      return result;
     };
     bridge.onsizechange = ({ height: h }: { width?: number; height?: number }) => { if (h) setHeight(Math.ceil(h)); };
     bridge.onloggingmessage = (p: unknown) => push('log', p);

@@ -76,9 +76,9 @@ export const quote = {
   meeting_points: { pickup: vehicleDetail.meeting_points.filter((point) => point.type === 'PICKUP'), return: vehicleDetail.meeting_points.filter((point) => point.type === 'RETURN') },
   breakdown: [
     { concept: 'daily_price', description: 'Alquiler · Tarifa diaria', unit_amount: 80000, quantity: 2, amount: 160000 },
-    { concept: 'rentennials_cover', description: 'Rentennials Cover · Cancelación flexible', unit_amount: 2990, quantity: 1, amount: 2990 },
-    { concept: 'unlimited_tolls', description: 'Peajes ilimitados', unit_amount: 7500, quantity: 2, amount: 15000 },
-    { concept: 'discount_coupon', description: 'Descuento PRIMAVERA', unit_amount: -3340, quantity: 1, amount: -3340 },
+    { concept: 'rentennials_cover', description: 'Rentennials Cover · Cancelación flexible', unit_amount: null, quantity: 1, amount: 2990 },
+    { concept: 'unlimited_tolls', description: 'Peajes ilimitados', unit_amount: null, quantity: 2, amount: 15000 },
+    { concept: 'discount_coupon', description: 'Descuento PRIMAVERA', unit_amount: null, quantity: 1, amount: -3340 },
   ],
   total: 174650, currency: 'ARS', total_days: 2, price_per_day: 80000, discount: 3340, discount_code: 'PRIMAVERA',
   pay_now: 90510, pay_on_pickup: 84140, security_deposit: 620000, security_deposit_currency: 'ARS', timezone: MZA, automatic_approval: true,

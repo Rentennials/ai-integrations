@@ -76,11 +76,14 @@ fija el endpoint productivo y no incluye `.app.json` ni credenciales.
 
 ## Estado y pendientes
 
-Actualización local 2026-10-09: views 1.0.2 preparadas con navegación
+Actualización local 2026-10-09: views 1.0.3 implementadas con recotización
+automática tras 500 ms al editar opciones. Sin cálculo del total en frontend;
+el último precio confirmado se conserva ante errores y la reserva queda bloqueada
+hasta aplicar una respuesta vigente. Las views 1.0.2 incorporaron navegación
 listado/detalle/cotización dentro del widget, foto del vehículo, orden visible
 y editor de fechas, horarios, extras, puntos, cupón y coberturas. El precio
 se actualiza en el servidor y la reserva se confirma en el chat después de una
-recotización del modelo. Publicación y verificación real posteriores pendientes.
+recotización del modelo. Nueva publicación y verificación real posteriores pendientes.
 Lint/tipos, 50 tests Vitest, build y 53 Playwright pasan. Capturas regeneradas
 con datos sintéticos; todavía no son evidencia de ChatGPT real.
 

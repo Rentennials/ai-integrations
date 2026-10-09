@@ -131,13 +131,19 @@ test('coverage selection requotes and preserves other types before chat confirma
   expect(calls.join(' ')).not.toContain('create_booking_request');
 });
 
-test('coverage failure rolls back selection and total', async ({ page }) => {
+test('coverage failure preserves the applied total and supports an explicit retry', async ({ page }) => {
   const { app } = await open(page, 'quote', 'fast', 706, 'light');
   await page.getByTestId('fail-actions').check();
   await app.getByRole('radio', { name: 'Cobertura Premium', exact: true }).click();
-  await expect(app.getByRole('radio', { name: 'Cobertura Premium', exact: true })).not.toBeChecked();
+  await expect(app.getByRole('radio', { name: 'Cobertura Premium', exact: true })).toBeChecked();
   await expect(app.locator('.rt-total__amount')).toContainText('174.650');
   await expect(app.getByText('No se pudo actualizar la cotización.', { exact: false })).toBeVisible();
+  await expect(app.getByRole('button', { name: 'Solicitar reserva', exact: true })).toBeDisabled();
+  await expect(page.locator('[data-kind="callServerTool"]')).toHaveCount(1);
+  await page.getByTestId('fail-actions').uncheck();
+  await app.getByRole('button', { name: 'Reintentar cotización', exact: true }).click();
+  await expect(app.locator('.rt-total__amount')).toContainText('233.650');
+  await expect(page.locator('[data-kind="callServerTool"]')).toHaveCount(2);
 });
 
 test('quote editor applies extras and both meeting points before chat confirmation', async ({ page }) => {
@@ -147,7 +153,7 @@ test('quote editor applies extras and both meeting points before chat confirmati
   await app.getByLabel('Devolución', { exact: true }).selectOption('mp_fx_3');
   await expect(app.getByRole('button', { name: 'Solicitar reserva', exact: true })).toBeDisabled();
   await expect(app.locator('.rt-total__amount')).toContainText('174.650');
-  await app.getByRole('button', { name: 'Actualizar cotización', exact: true }).click();
+  await expect(app.getByRole('button', { name: 'Actualizar cotización', exact: true })).toHaveCount(0);
   await expect(app.locator('.rt-total__amount')).toContainText('212.650');
   await expect(app.getByRole('button', { name: 'Solicitar reserva', exact: true })).toBeEnabled();
   await app.getByRole('button', { name: 'Solicitar reserva', exact: true }).click();
@@ -160,12 +166,10 @@ test('quote editor applies extras and both meeting points before chat confirmati
 test('quote editor validates dates and preserves applied quote after coupon failure', async ({ page }) => {
   const { app } = await open(page, 'quote', 'fast', 706, 'light');
   await app.getByLabel('Fecha de devolución', { exact: true }).fill('2026-10-01');
-  await app.getByRole('button', { name: 'Actualizar cotización', exact: true }).click();
   await expect(app.getByRole('alert')).toContainText('Revisá las fechas');
   await expect(page.locator('[data-kind="callServerTool"]')).toHaveCount(0);
   await app.getByRole('button', { name: 'Descartar cambios' }).click();
   await app.getByLabel('Cupón de descuento', { exact: true }).fill('INVALID');
-  await app.getByRole('button', { name: 'Actualizar cotización', exact: true }).click();
   await expect(app.getByRole('alert')).toContainText('No se pudo actualizar la cotización');
   await expect(app.locator('.rt-total__amount')).toContainText('174.650');
   await expect(app.getByRole('button', { name: 'Solicitar reserva', exact: true })).toBeDisabled();
@@ -173,17 +177,28 @@ test('quote editor validates dates and preserves applied quote after coupon fail
   await expect(app.getByRole('button', { name: 'Solicitar reserva', exact: true })).toBeEnabled();
 });
 
-test('date and time edits preserve selected extras and reach the server', async ({ page }) => {
-  const { app } = await open(page, 'quote', 'fast', 706, 'light');
+test('date and time edits requote automatically and ignore an older in-flight response', async ({ page }) => {
+  await page.goto('/?view=quote&fixture=fast&width=706&theme=light&firstQuoteDelay=1600');
+  await expect(page.getByTestId('sandbox')).toHaveAttribute('data-ready', 'true');
+  const app = page.frameLocator('[data-testid="sandbox"]').frameLocator('iframe');
   await app.getByLabel('Fecha de retiro', { exact: true }).fill('2026-11-10');
   await app.getByLabel('Fecha de devolución', { exact: true }).fill('2026-11-14');
   await app.getByLabel('Hora de retiro', { exact: true }).fill('09:30');
   await app.getByLabel('Hora de devolución', { exact: true }).fill('17:00');
   await app.getByLabel('Cadenas para la nieve', { exact: true }).selectOption('1');
-  await app.getByRole('button', { name: 'Actualizar cotización', exact: true }).click();
-  await expect(page.locator('[data-kind="callServerTool"]')).toContainText('"from_date":"2026-11-10"');
-  await expect(page.locator('[data-kind="callServerTool"]')).toContainText('"from_date_time":"09:30"');
-  await expect(page.locator('[data-kind="callServerTool"]')).toContainText('snow_chains');
+  await expect(page.locator('[data-kind="callServerTool"]').last()).toContainText('"from_date":"2026-11-10"');
+  await expect(page.locator('[data-kind="callServerTool"]').last()).toContainText('"from_date_time":"09:30"');
+  await expect(page.locator('[data-kind="callServerTool"]').last()).toContainText('snow_chains');
+  await expect(app.getByRole('button', { name: 'Solicitar reserva', exact: true })).toBeDisabled();
+  await expect(app.getByLabel('Silla de bebé (0 a 3 años)', { exact: true })).toBeEnabled();
+  await app.getByLabel('Silla de bebé (0 a 3 años)', { exact: true }).selectOption('1');
+  await expect(app.locator('.rt-total__amount')).toContainText('199.650');
+  await expect(page.locator('[data-kind="callServerToolEnd"]')).toHaveCount(2);
+  await expect(app.locator('.rt-total__amount')).toContainText('199.650');
+  await expect(app.getByRole('button', { name: 'Solicitar reserva', exact: true })).toBeEnabled();
+  await app.getByRole('button', { name: 'Solicitar reserva', exact: true }).click();
+  await expect(page.locator('[data-kind="sendMessage"]')).toContainText('baby_seat');
+  await expect(page.locator('[data-kind="sendMessage"]')).toContainText('snow_chains');
 });
 
 test('search order requeries and keeps airport and no-card filters', async ({ page }) => {
@@ -209,7 +224,6 @@ test('local quote preserves applied changes after returning to results', async (
   const { app } = await open(page, 'vehicle-results', 'ars', 706, 'light');
   await app.getByRole('button', { name: 'Cotizar', exact: true }).first().click();
   await app.getByLabel('Silla de bebé (0 a 3 años)', { exact: true }).selectOption('1');
-  await app.getByRole('button', { name: 'Actualizar cotización', exact: true }).click();
   await expect(app.locator('.rt-total__amount')).toContainText('184.650');
   await app.getByRole('button', { name: 'Volver al listado' }).click();
   await expect(app.locator('article.rt-vcard')).toHaveCount(5);

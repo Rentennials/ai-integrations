@@ -10,7 +10,10 @@
 
 ### Cotización integrada · implementación local 2026-10-09
 
-Views 1.0.2 preparadas, sin publicar. Resultados abre detalle/quote por lectura
+Views 1.0.3 implementadas: editor con recotización automática tras 500 ms,
+descarte de respuestas tardías, reintento explícito y precio aplicado separado.
+No calcula totales ni modifica la regla de pricing upstream. Distribución nueva
+y aceptación real pendientes. Resultados abre detalle/quote por lectura
 del bridge en el mismo widget. Quote muestra identidad/foto y permite editar
 fechas, horarios, extras/cantidades, puntos, cupón y covers; separa borrador de
 cotización aplicada. Reserva bloqueada mientras hay cambios pendientes y
@@ -19,7 +22,8 @@ Orden visible: ranking de plataforma por defecto, tarifa diaria asc/desc,
 rating o reservas. Cambiar orden consulta el servidor conservando filtros.
 La allowlist incorpora también metadata de lecturas locales; requiere que el
 servidor y el host permitan el origen. Los 404 no se arreglan desde la view.
-El change primario vive en mcp-api/specs/changes/mcp-quote-workspace/.
+Los changes primarios viven en mcp-api/specs/changes/mcp-quote-workspace/ y
+mcp-api/specs/changes/mcp-auto-requote/.
 Validado: lint/tipos, 50 Vitest, build y 53 Playwright. Capturas sintéticas de
 harness regeneradas; no equivalen a ejecución real en ChatGPT. Sin nuevas
 dependencias, commits, instalación ni publicación de tags.

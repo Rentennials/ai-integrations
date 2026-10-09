@@ -403,6 +403,10 @@ Campos: `breakdown[]{concept,description,unit_amount,quantity,amount}`, `total`,
 `pay_on_pickup`, `security_deposit`, `security_deposit_currency`, `timezone`,
 `automatic_approval`, `payment_fast`.
 
+`amount` es el importe normalizado por el servidor. `unit_amount` es null para
+cargos acumulados (horas y extras); no mostrar cantidad × precio en esos casos.
+No sumar el breakdown para reemplazar el total de pricing.
+
 `included_coverages[]{type,description,price,deposit_amount,max_deductible,
 luggage_theft_coverage}`; `available_coverages[]` tiene esos campos más `id`.
 `available_extras[]{key,label,description,price_by_quantity[]}`: la posición i
@@ -411,7 +415,13 @@ representa precio total para i+1 unidades; no asumir precio unitario lineal.
 Desglose en orden del servidor y total destacado; descuento ya descontado,
 no restarlo otra vez. Coberturas incluidas y disponibles claramente separadas;
 extras y coberturas disponibles no se suman al total automáticamente.
-No hay selectores de compra ni ejecución de escritura desde esta view.
+Los selectores editan argumentos de cotización, no compran ni ejecutan escrituras.
+Fechas, horarios, coberturas, extras/cantidades, puntos y cupón recotizan por el
+bridge oficial tras 500 ms sin cambios y con entradas válidas. No se exige botón
+Actualizar. Edición permitida durante una lectura; respuestas anteriores no
+reemplazan la última selección. Un error requiere corrección o Reintentar y
+permite Descartar. El último total confirmado se distingue de cambios pendientes.
+Reserva bloqueada durante espera, lectura, entradas inválidas o error pendiente.
 
 `payment_fast` es null o `{available,amount_now,remaining_amount,currency,
 remaining_charge_date}`. Null equivale a no disponible. Con available true,
@@ -425,7 +435,7 @@ en el chat. Nunca llama `create_booking_request`, nunca fija confirmed=true.
 
 **Composición visual:** título “Tu cotización”, contexto de fechas solo cuando
 esté disponible en tool-input, desglose en PriceRows, coberturas incluidas,
-opcionales/extras como información y TotalPanel. Luego filas “A pagar ahora”,
+opcionales/extras editables para recotizar y TotalPanel. Luego filas “A pagar ahora”,
 “Al retirar” y “Depósito de garantía” separadas del total. Payment Fast en
 Notice/panel violeta tenue, con importe inicial y siguiente cobro explícitos.
 Cerrar con modo de aprobación y CTA de solicitud de reserva mediante chat.

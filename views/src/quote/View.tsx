@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { Actions } from '../_bridge/useMcpApp';
 import { Quote as QuoteSchema, QuoteArguments, type Quote, type VehiclePresentation } from '../_shared/contracts';
 import { Button, DateBlock, Notice, PriceRow, SafeImage, SectionHead, TotalPanel, useAction } from '../_shared/components';
@@ -37,7 +38,7 @@ export function QuoteContent({ data: initialData, dates: initialDates, actions, 
 
   const [book, booking] = useAction(async () => {
     setBookingFailed(false);
-    if (requoting || dirty || !current.args || missingRequiredPoint) return false;
+    if (requoting || dirty || quoteFailed || editor.invalid || !current.args || missingRequiredPoint) return false;
     if (current.args && !await actions.updateModelContext({
       tool: 'get_vehicle_quote', arguments: current.args,
       quote: { total: data.total, currency: data.currency, automatic_approval: data.automatic_approval },
@@ -77,7 +78,7 @@ export function QuoteContent({ data: initialData, dates: initialDates, actions, 
         {missingRequiredPoint ? <Notice>{t('quote.chooseRequestedPoint')}</Notice> : null}
         {draft ? <section className="rt-card rt-quote-editor">
           <SectionHead title={t('quote.editTrip')} note={t('quote.editNote')} />
-          <fieldset disabled={requoting || booking} className="rt-edit-fields">
+          <fieldset disabled={booking} className="rt-edit-fields">
             <label>{t('quote.pickupDate')}<input type="date" value={draft.from_date} onChange={(e) => editor.update({ from_date: e.target.value })} /></label>
             <label>{t('quote.pickupTime')}<input type="time" value={draft.from_date_time ?? '10:00'} onChange={(e) => editor.update({ from_date_time: e.target.value })} /></label>
             <label>{t('quote.returnDate')}<input type="date" value={draft.to_date} onChange={(e) => editor.update({ to_date: e.target.value })} /></label>
@@ -121,7 +122,7 @@ export function QuoteContent({ data: initialData, dates: initialDates, actions, 
           <section className="rt-section">
             <SectionHead title={t('quote.optional')} note={t('quote.selectionNote')} />
             <div className="rt-tiles">
-              {coverageGroups.map((type) => <fieldset key={type} className="rt-option" disabled={requoting || booking || !current.args}>
+              {coverageGroups.map((type) => <fieldset key={type} className="rt-option" disabled={booking || !current.args}>
                 <legend className="rt-small">{t(type === 'franchise_cover' ? 'quote.groupFranchise' : type === 'deposit_cover' ? 'quote.groupDeposit' : type === 'reserve_cover' ? 'quote.groupReserve' : 'quote.optional')}</legend>
                 {selectableOptions.filter((option) => option.type === type).map((x) => <label key={x.id} className="rt-option rt-coverage-choice" data-selected={(draft?.covers ?? current.args?.covers ?? []).some((id) => selectableOptions.find((option) => option.id === id)?.type === type) ? (draft?.covers ?? current.args?.covers ?? []).includes(x.id!) : (data.included_coverages ?? []).some((included) => included.id === x.id)}>
                   <span className="rt-between">
@@ -145,7 +146,7 @@ export function QuoteContent({ data: initialData, dates: initialDates, actions, 
                   <span className="rt-small">{x.description || t('quote.noDescription')}</span>
                 </div>
                 <div className="rt-row" style={{ gap: 6 }}>
-                  <label className="rt-edit-label">{t('quote.quantity')}<select aria-label={x.label ?? x.key} disabled={requoting || booking || !draft} value={draft?.extra_services?.find((extra) => extra.key === x.key)?.quantity ?? (draft?.extra_services?.some((extra) => extra.key === x.key) ? 1 : 0)} onChange={(e) => {
+                  <label className="rt-edit-label">{t('quote.quantity')}<select aria-label={x.label ?? x.key} disabled={booking || !draft} value={draft?.extra_services?.find((extra) => extra.key === x.key)?.quantity ?? (draft?.extra_services?.some((extra) => extra.key === x.key) ? 1 : 0)} onChange={(e) => {
                     const quantity = Number(e.target.value);
                     editor.update({ extra_services: [...(draft?.extra_services ?? []).filter((extra) => extra.key !== x.key), ...(quantity ? [{ key: x.key, quantity }] : [])] });
                   }}><option value={0}>{t('quote.notSelected')}</option>{x.price_by_quantity.map((p, i) => <option key={i} value={i + 1}>{t('quote.tier', { n: i + 1, price: m(p) })}</option>)}</select></label>
@@ -159,7 +160,7 @@ export function QuoteContent({ data: initialData, dates: initialDates, actions, 
           {(['pickup', 'return'] as const).map((leg) => {
             const field = leg === 'pickup' ? 'pickup_meeting_point_id' : 'return_meeting_point_id';
             const points = data.meeting_points![leg];
-            return <label key={leg} className="rt-edit-label">{t(leg === 'pickup' ? 'detail.pickup' : 'detail.return')}<select aria-label={t(leg === 'pickup' ? 'detail.pickup' : 'detail.return')} disabled={requoting || booking || !draft} value={draft?.[field] ?? ''} onChange={(e) => editor.update({ [field]: e.target.value || undefined })}>
+            return <label key={leg} className="rt-edit-label">{t(leg === 'pickup' ? 'detail.pickup' : 'detail.return')}<select aria-label={t(leg === 'pickup' ? 'detail.pickup' : 'detail.return')} disabled={booking || !draft} value={draft?.[field] ?? ''} onChange={(e) => editor.update({ [field]: e.target.value || undefined })}>
               <option value="">{t('quote.ownerDefault')}</option>
               {draft?.[field] && !points.some((point) => point.id === draft[field]) ? <option value={draft[field]} disabled>{t('quote.pointUnavailable')}</option> : null}
               {points.map((point) => <option key={point.id} value={point.id}>{point.name ?? t('notAvailable')} · {m(point.price)}</option>)}
@@ -167,11 +168,11 @@ export function QuoteContent({ data: initialData, dates: initialDates, actions, 
           })}
         </section> : null}
         {dirty ? <Notice>{t('quote.unapplied')}</Notice> : null}
-        {draft ? <div className="rt-actions"><Button disabled={!dirty || requoting || booking} loading={requoting} onClick={() => void editor.apply()}>{t('quote.update')}</Button><Button variant="secondary" disabled={!dirty || requoting || booking} onClick={editor.reset}>{t('quote.discard')}</Button></div> : null}
+        {draft && dirty ? <div className="rt-actions">{quoteFailed ? <Button disabled={requoting || booking || editor.invalid} onClick={editor.retry}>{t('quote.retry')}</Button> : null}<Button variant="secondary" disabled={booking} onClick={editor.reset}>{t('quote.discard')}</Button></div> : null}
       </div>
 
       <aside className="rt-card rt-split__side">
-        <TotalPanel label={t('quote.total')} amount={totalText ?? t('priceUnavailable')} sub={totalSub || undefined} />
+        <TotalPanel label={t(dirty ? 'quote.previousTotal' : 'quote.total')} amount={totalText ?? t('priceUnavailable')} sub={totalSub || undefined} />
         <div>
           <PriceRow titleFont label={t('quote.payNow')} sub={t('quote.payNowSub')} amount={m(data.pay_now)} />
           <PriceRow titleFont label={t('quote.onPickup')} sub={t('quote.onPickupSub')} amount={m(data.pay_on_pickup)} />
@@ -190,7 +191,7 @@ export function QuoteContent({ data: initialData, dates: initialDates, actions, 
           <span style={{ color: 'var(--rt-brand)', flex: 'none' }}>{data.automatic_approval === true ? <IconBolt size={18} /> : <IconClock size={18} />}</span>
           <span>{data.automatic_approval === true ? t('quote.autoApproval') : data.automatic_approval === false ? t('quote.needsApproval') : t('notAvailable')}</span>
         </div>
-        <Button block disabled={requoting || dirty || missingRequiredPoint || !current.args || data.total == null} loading={booking} onClick={() => void book()}>{t('requestBooking')}</Button>
+        <Button block disabled={requoting || dirty || quoteFailed || editor.invalid || missingRequiredPoint || !current.args || data.total == null} loading={booking} onClick={() => void book()}>{t('requestBooking')}</Button>
         <span className="rt-small" style={{ textAlign: 'center', marginTop: -6 }}>{t('quote.confirmInChat')}</span>
       </aside>
     </div>
@@ -209,4 +210,3 @@ export function QuoteView({ view }: ViewProps) {
     </Frame>
   );
 }
-import { useState } from 'react';
