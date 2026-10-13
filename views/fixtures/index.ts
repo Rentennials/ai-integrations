@@ -26,11 +26,16 @@ export const searchResult = {
     vehicle(1, { name: 'Renault Kwid', year: '2018', owner_rating: 5, immediate_reserve: true, bookings_count: 12, price_before_promotion: 190000 }),
     vehicle(2, { name: 'Fiat Mobi Trekking 1.0', year: '2024', total_price: 204030, price_per_day: 102015, passengers: '4', city: 'Luján de Cuyo', price_before_promotion: 204030, is_super_host: true, automatic_approval: true, owner_rating: 4.9 }),
     vehicle(3, { name: 'Peugeot 208 Allure', year: '2023', total_price: 286400, price_per_day: 143200, transmission: 'Automática', city: 'Godoy Cruz', bookings_count: 38, price_before_promotion: 286400, is_super_host: true, automatic_approval: true, immediate_reserve: true, owner_rating: 4.7 }),
-    vehicle(4, { name: 'Toyota Etios', year: null, slug: null, image_url: null, passengers: null, owner_rating: null, total_price: 158000, price_per_day: 79000, city: 'Guaymallén', province: null, bookings_count: 5, price_before_promotion: 158000 }),
-    vehicle(5, { name: 'Chevrolet Onix LTZ', total_price: 0, price_per_day: 0, transmission: 'Automática', is_super_host: true, bookings_count: 7, price_before_promotion: 0, image_url: 'http://photos.rentennials.app/insecure.jpg' }),
-    vehicle(6, { name: 'Volkswagen Polo Highline con un nombre de publicación muy largo para probar el ajuste de línea', year: '2021', total_price: 312900, price_per_day: 156450, transmission: 'Automática', city: 'Las Heras', bookings_count: 3, price_before_promotion: 340000, automatic_approval: true, image_url: 'https://evil.example.com/v6.jpg', owner_rating: 0 }),
+    vehicle(4, { name: 'Toyota Etios', year: null, slug: null, passengers: null, owner_rating: null, total_price: 158000, price_per_day: 79000, city: 'Guaymallén', province: null, bookings_count: 5, price_before_promotion: 158000 }),
+    vehicle(5, { name: 'Chevrolet Onix LTZ', total_price: 190000, price_per_day: 95000, transmission: 'Automática', is_super_host: true, bookings_count: 7, price_before_promotion: 190000 }),
+    vehicle(6, { name: 'Volkswagen Polo Highline con un nombre de publicación muy largo para probar el ajuste de línea', year: '2021', total_price: 312900, price_per_day: 156450, transmission: 'Automática', city: 'Las Heras', bookings_count: 3, price_before_promotion: 340000, automatic_approval: true, owner_rating: 0 }),
   ],
 };
+
+// Edge cases used by Vitest only; they are not part of the default result pages.
+export const noPhotoVehicle = vehicle(11, { name: 'Sin foto', image_url: null });
+export const unsafeImageVehicle = vehicle(12, { name: 'Imagen insegura', image_url: 'http://photos.rentennials.app/insecure.jpg' });
+export const zeroPriceVehicle = vehicle(13, { name: 'Sin precio', total_price: 0, price_per_day: 0, price_before_promotion: 0 });
 
 const moreVehicles = [
   vehicle(8, { name: 'Ford Ka SE', year: '2019', total_price: 131000, price_per_day: 65500, city: 'Maipú', bookings_count: 1, price_before_promotion: 131000, owner_rating: 4.2 }),

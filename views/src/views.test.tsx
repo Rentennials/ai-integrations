@@ -25,6 +25,7 @@ describe('contracts accept every fixture', () => {
 describe('vehicle-results', () => {
   const html = render(<VehicleResultsContent data={SearchVehiclesResult.parse({ ...fx.searchResult, vehicles: fx.searchResult.vehicles.slice(0, 5) })} actions={actions} />);
   const one = (index: number) => render(<VehicleResultsContent data={SearchVehiclesResult.parse({ ...fx.searchResult, vehicles: [fx.searchResult.vehicles[index]] })} actions={actions} />);
+  const card = (vehicle: unknown) => render(<VehicleResultsContent data={SearchVehiclesResult.parse({ ...fx.searchResult, vehicles: [vehicle] })} actions={actions} />);
   it('renders cards, badges only for true and estimate notice', () => {
     expect(html).toContain('Renault Kwid 2018');
     expect(html).toContain('24 coincidencias');
@@ -51,15 +52,22 @@ describe('vehicle-results', () => {
     expect(noProvince).not.toContain('null');
     expect(one(0)).toContain('Mendoza - Capital');
   });
-  it('keeps null rating, null year, zero price and rejects unsafe images', () => {
+  it('keeps null rating and year, and rejects unsafe or missing images', () => {
     expect(html).toContain('Sin calificaciones');
     expect(html).toContain('>Toyota Etios<');
-    expect(html).toMatch(/ARS\s0/);
     expect(html).not.toContain('http://photos.rentennials.app');
     expect(html).not.toContain('evil.example.com');
-    expect(html).toContain('Imagen no disponible');
-    const zero = render(<VehicleResultsContent data={SearchVehiclesResult.parse({ ...fx.searchResult, vehicles: [fx.searchResult.vehicles[5]] })} actions={actions} />);
-    expect(zero).toContain('0,0');
+    expect(card(fx.unsafeImageVehicle)).toContain('Imagen no disponible');
+    expect(card(fx.noPhotoVehicle)).toContain('Imagen no disponible');
+    expect(card(fx.searchResult.vehicles[5])).toContain('0,0');
+  });
+  it('shows price unavailable instead of zero when total_price is 0 or null', () => {
+    for (const vehicle of [fx.zeroPriceVehicle, { ...fx.zeroPriceVehicle, total_price: null, price_per_day: null }]) {
+      const markup = card(vehicle);
+      expect(markup).toContain('Precio no disponible');
+      expect(markup).not.toMatch(/ARS\s0/);
+      expect(markup).not.toContain('total x');
+    }
   });
   it('wraps long names and never shows ids or slugs', () => {
     expect(html).not.toContain('nombre de publicación muy largo');

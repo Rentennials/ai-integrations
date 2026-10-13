@@ -42,14 +42,15 @@ function VehicleCard({ v, chosen, pending, locked, onChoose }: { v: VehicleSumma
   const { t, locale } = useI18n();
   const title = vehicleTitle(v);
   const rating = formatRating(v.owner_rating, locale);
-  const total = formatMoney(v.total_price, v.currency, locale);
-  const onPromo = typeof v.price_before_promotion === 'number' && typeof v.total_price === 'number' && v.price_before_promotion > v.total_price;
+  const totalPrice = typeof v.total_price === 'number' && v.total_price > 0 ? v.total_price : null;
+  const total = totalPrice === null ? null : formatMoney(totalPrice, v.currency, locale);
+  const onPromo = totalPrice !== null && typeof v.price_before_promotion === 'number' && v.price_before_promotion > totalPrice;
   const before = onPromo ? formatMoney(v.price_before_promotion, v.currency, locale) : null;
   const place = [v.province, v.city].filter((part): part is string => Boolean(part)).join(' - ') || t('results.noCity');
   const trips = typeof v.bookings_count === 'number' && v.bookings_count > 0
     ? (v.bookings_count === 1 ? t('results.trip', { n: 1 }) : t('results.trips', { n: v.bookings_count }))
     : null;
-  const days = typeof v.total_days === 'number'
+  const days = totalPrice !== null && typeof v.total_days === 'number'
     ? (v.total_days === 1 ? t('results.day') : t('results.days', { n: v.total_days }))
     : null;
 

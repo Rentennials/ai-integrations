@@ -378,7 +378,7 @@ pills sobre ella, luego nombre, lugar, descuento, total y el botón Elegir.
 
 **Layout**
 
-- Carrusel horizontal de 3 a 8 ítems con la siguiente tarjeta asomando. Tarjetas
+- Cada consulta de la view (orden y “Ver más autos”) pide 5 autos (`limit: 5`). “Ver más autos” agrega de a 5 hasta 15 vehículos cargados; el botón desaparece al llegar a 15 o cuando `has_more` es false. La carga inicial es la que devuelve la tool. El carrusel muestra la siguiente tarjeta asomando. Tarjetas
   de 260 px (240 px bajo 400 px de ancho) y 12 px de separación, con snap.
   Flechas anterior y siguiente desde 640 px.
 - Chips en vez de menús. Sin scroll vertical interno: la view crece en alto; el
