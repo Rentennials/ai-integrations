@@ -14,6 +14,7 @@
     "test:e2e": "yarn workspace rentennials-mcp-views test:e2e",
     "openai:validate": "yarn workspace rentennials-openai-plugin validate",
     "openai:package": "yarn workspace rentennials-openai-plugin build",
+    "claude:validate": "claude plugin validate ./claude --strict && claude plugin validate .",
     "format": "prettier --write ."
   },
   "devDependencies": {

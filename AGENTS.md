@@ -5,8 +5,16 @@ Leé `CLAUDE.md`, `README.md` y, para pantallas, `views/VIEWS-SPEC.md`.
 ## Alcance y estructura
 
 Este repo público aloja presentación y publicación: `views/` para MCP Apps,
-`openai/` para el plugin y `claude/`/`whatsapp/` como placeholders. No contiene
-el servidor MCP ni lógica de acceso al ecosistema privado.
+`openai/` para el plugin, `claude/` para el plugin de Claude y `whatsapp/` como
+placeholder. No contiene el servidor MCP ni lógica de acceso al ecosistema privado.
+
+## Plugin de Claude
+
+Marketplace en `.claude-plugin/marketplace.json`; plugin en `claude/`, con
+`.claude-plugin/plugin.json`, `.mcp.json`, `skills/rent-a-car/SKILL.md` (inglés),
+`assets/` y `listing/`. `claude/.mcp.json` apunta siempre a producción, nunca a
+staging. Validar con `yarn claude:validate`. Para probar contra staging se usa un
+connector custom o `claude mcp add` local, sin commitear esa URL.
 
 ## Reglas
 
@@ -21,7 +29,7 @@ el servidor MCP ni lógica de acceso al ecosistema privado.
   sin firmas ni trailers de atribución. No push, amend, rebase ni force.
 - El build de views, el harness y los tests pedidos están permitidos acá.
   Scripts: yarn lint/typecheck/test/build/views:dev/test:e2e y
-  openai:validate/openai:package. Las views del agente están integradas: build
+  openai:validate/openai:package/claude:validate. Las views del agente están integradas: build
   antes de harness/Playwright; no informar éxito sin correr los comandos.
 - Cambios de pantallas dentro de `views/src/<view>/`; comunicación por el
   bridge oficial, sin red propia ni llamadas de escritura desde la UI.

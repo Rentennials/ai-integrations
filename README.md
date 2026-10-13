@@ -8,7 +8,8 @@ privado; acá viven su presentación y el material de publicación.
 
 - `openai/`: paquete del plugin de ChatGPT y Codex.
 - `views/`: dos pantallas MCP Apps (`vehicle-results` y `quote`) y su especificación.
-- `claude/` y `whatsapp/`: placeholders para próximas integraciones.
+- `claude/`: plugin de Claude (conector y skill `rent-a-car`); el marketplace está en `.claude-plugin/`.
+- `whatsapp/`: placeholder para próximas integraciones.
 - `.github/workflows/`: validación, distribución de views y empaquetado de OpenAI.
 
 ## Reglas del repositorio público
@@ -46,6 +47,7 @@ yarn views:dev
 yarn test:e2e
 yarn openai:validate
 yarn openai:package
+yarn claude:validate
 ```
 
 La instalación inicial y la generación de `yarn.lock` las hace el usuario;
@@ -73,6 +75,17 @@ Los scripts leen variables del proceso, no cargan automáticamente `.env`.
 `OPENAI_SUPPORT_URL` como variable del repositorio solo si se desea sobrescribir
 la página de contacto. El workflow de empaquetado
 fija el endpoint productivo y no incluye `.app.json` ni credenciales.
+
+## Plugin de Claude
+
+`claude/` contiene el plugin: `.claude-plugin/plugin.json`, `.mcp.json`, la skill
+`skills/rent-a-car/SKILL.md` en inglés, `assets/` y `listing/`. El marketplace
+está en `.claude-plugin/marketplace.json`. `yarn claude:validate` valida ambos con
+`claude plugin validate --strict` en `claude/` y sin modo estricto en la raíz.
+
+`claude/.mcp.json` apunta siempre al endpoint de producción, nunca a staging. Para
+probar contra staging se usa un connector custom o `claude mcp add` local, sin
+commitear esa URL.
 
 ## Estado y pendientes
 

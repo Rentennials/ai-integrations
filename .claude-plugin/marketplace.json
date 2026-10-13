@@ -1,0 +1,11 @@
+{
+  "name": "rentennials",
+  "owner": { "name": "Rentennials", "url": "https://www.rentennials.app" },
+  "plugins": [
+    {
+      "name": "rentennials",
+      "source": "./claude",
+      "description": "Find and book rental cars"
+    }
+  ]
+}
