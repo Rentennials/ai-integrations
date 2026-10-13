@@ -15,26 +15,33 @@ const ctx = { country: 'Argentina', region: 'Mendoza', from_date: '2026-10-02', 
 const vehicle = (n: number, over: Record<string, unknown>) => ({
    id: String(n).padStart(24, '0'), slug: `vehicle-fx-${n}`, name: 'Vehículo', year: '2022', image_url: `${PHOTOS}/v${n}.jpg`,
   total_price: 174650, price_per_day: 87325, currency: 'ARS', total_days: 2, transmission: 'Manual', passengers: '5',
-  city: 'Mendoza · Capital', timezone: MZA, automatic_approval: false, is_super_host: false, immediate_reserve: false, owner_rating: 4.8,
+  city: 'Capital', province: 'Mendoza', bookings_count: 0, price_before_promotion: 174650,
+  timezone: MZA, automatic_approval: false, is_super_host: false, immediate_reserve: false, owner_rating: 4.8,
   ...over,
 });
 
 export const searchResult = {
   total_count: 24, has_more: true, page: 1, limit: 6, search_context: ctx,
   vehicles: [
-    vehicle(1, { name: 'Renault Kwid', year: '2018', owner_rating: 5, immediate_reserve: true }),
-    vehicle(2, { name: 'Fiat Mobi Trekking 1.0', year: '2024', total_price: 204030, price_per_day: 102015, passengers: '4', city: 'Mendoza · Luján de Cuyo', is_super_host: true, automatic_approval: true, owner_rating: 4.9 }),
-    vehicle(3, { name: 'Peugeot 208 Allure', year: '2023', total_price: 286400, price_per_day: 143200, transmission: 'Automática', city: 'Mendoza · Godoy Cruz', is_super_host: true, automatic_approval: true, immediate_reserve: true, owner_rating: 4.7 }),
-    vehicle(4, { name: 'Toyota Etios', year: null, slug: null, image_url: null, passengers: null, owner_rating: null, total_price: 158000, price_per_day: 79000, city: 'Mendoza · Guaymallén' }),
-    vehicle(5, { name: 'Chevrolet Onix LTZ', total_price: 0, price_per_day: 0, transmission: 'Automática', is_super_host: true, image_url: 'http://photos.rentennials.app/insecure.jpg' }),
-    vehicle(6, { name: 'Volkswagen Polo Highline con un nombre de publicación muy largo para probar el ajuste de línea', year: '2021', total_price: 312900, price_per_day: 156450, transmission: 'Automática', city: 'Mendoza · Las Heras', automatic_approval: true, image_url: 'https://evil.example.com/v6.jpg', owner_rating: 0 }),
+    vehicle(1, { name: 'Renault Kwid', year: '2018', owner_rating: 5, immediate_reserve: true, bookings_count: 12, price_before_promotion: 190000 }),
+    vehicle(2, { name: 'Fiat Mobi Trekking 1.0', year: '2024', total_price: 204030, price_per_day: 102015, passengers: '4', city: 'Luján de Cuyo', price_before_promotion: 204030, is_super_host: true, automatic_approval: true, owner_rating: 4.9 }),
+    vehicle(3, { name: 'Peugeot 208 Allure', year: '2023', total_price: 286400, price_per_day: 143200, transmission: 'Automática', city: 'Godoy Cruz', bookings_count: 38, price_before_promotion: 286400, is_super_host: true, automatic_approval: true, immediate_reserve: true, owner_rating: 4.7 }),
+    vehicle(4, { name: 'Toyota Etios', year: null, slug: null, image_url: null, passengers: null, owner_rating: null, total_price: 158000, price_per_day: 79000, city: 'Guaymallén', province: null, bookings_count: 5, price_before_promotion: 158000 }),
+    vehicle(5, { name: 'Chevrolet Onix LTZ', total_price: 0, price_per_day: 0, transmission: 'Automática', is_super_host: true, bookings_count: 7, price_before_promotion: 0, image_url: 'http://photos.rentennials.app/insecure.jpg' }),
+    vehicle(6, { name: 'Volkswagen Polo Highline con un nombre de publicación muy largo para probar el ajuste de línea', year: '2021', total_price: 312900, price_per_day: 156450, transmission: 'Automática', city: 'Las Heras', bookings_count: 3, price_before_promotion: 340000, automatic_approval: true, image_url: 'https://evil.example.com/v6.jpg', owner_rating: 0 }),
   ],
 };
+
+const moreVehicles = [
+  vehicle(8, { name: 'Ford Ka SE', year: '2019', total_price: 131000, price_per_day: 65500, city: 'Maipú', bookings_count: 1, price_before_promotion: 131000, owner_rating: 4.2 }),
+  vehicle(9, { name: 'Renault Sandero Stepway', year: '2021', total_price: 198500, price_per_day: 99250, transmission: 'Automática', city: 'Lujan', province: null, bookings_count: 0, price_before_promotion: 210000, owner_rating: 4.5 }),
+  vehicle(10, { name: 'Jeep Renegade Sport', year: '2020', total_price: 265000, price_per_day: 132500, city: 'Capital', bookings_count: 9, price_before_promotion: 265000, is_super_host: true, owner_rating: 4.6 }),
+];
 
 export const searchResultUsd = {
   total_count: 1, has_more: false, page: 1, limit: 6,
   search_context: { country: 'United States', region: 'Miami', from_date: '2026-12-20', from_date_time: '09:30', to_date: '2026-12-27', to_date_time: '09:30' },
-  vehicles: [vehicle(7, { name: 'Ford Escape', currency: 'USD', total_price: 420, price_per_day: 60, total_days: 7, timezone: 'America/New_York', city: 'Miami · Brickell', transmission: 'Automatic', automatic_approval: true })],
+  vehicles: [vehicle(7, { name: 'Ford Escape', currency: 'USD', total_price: 420, price_per_day: 60, total_days: 7, timezone: 'America/New_York', city: 'Brickell', province: 'Florida', bookings_count: 0, price_before_promotion: 420, transmission: 'Automatic', automatic_approval: true })],
 };
 
 const longDescription = [
@@ -101,7 +108,7 @@ export const fixtures: Record<string, Record<string, Fixture>> = {
   'vehicle-results': {
     runtime: { label: 'Origen dinámico', tool: 'search_vehicles', input: {}, result: { ...ok({ ...searchResult, vehicles: [{ ...searchResult.vehicles[0], image_url: 'https://images.example.com/preview.webp' }] }), _meta: { 'rentennials/image_origins': ['https://images.example.com'] } } },
     resultOrigins: { label: 'Política en lectura local', tool: 'search_vehicles', input: ctx, result: ok({ ...searchResult, vehicles: [{ ...searchResult.vehicles[0], slug: 'vehicle-fx-runtime' }] }) },
-    ars: { label: 'ARS · 6 autos', tool: 'search_vehicles', input: ctx, result: ok(searchResult) },
+    ars: { label: 'ARS · 5 autos', tool: 'search_vehicles', input: ctx, result: ok({ ...searchResult, page: 1, has_more: true, limit: 5, vehicles: searchResult.vehicles.slice(0, 5) }) },
     airport: { label: 'Aeropuerto · filtros', tool: 'search_vehicles', input: { ...ctx, pickup_location_id: '000000000000000000000101', return_location_id: '000000000000000000000102', has_deposit_cover: true }, result: ok(searchResult) },
     usd: { label: 'USD', tool: 'search_vehicles', input: {}, result: ok(searchResultUsd) },
     empty: { label: 'Vacío', tool: 'search_vehicles', input: {}, result: ok({ ...searchResult, vehicles: [], total_count: 0, has_more: false }) },
@@ -118,6 +125,9 @@ export const fixtures: Record<string, Record<string, Fixture>> = {
 
 export const serverTools: Record<string, (args: Record<string, unknown>) => Fixture['result']> = {
   search_vehicles: (args) => {
+    if (Number(args.page ?? 1) > 1) {
+      return ok({ ...searchResult, page: Number(args.page), has_more: false, limit: args.limit ?? 5, vehicles: moreVehicles, search_context: { ...ctx, sort: args.sort ?? 'default' } });
+    }
     const vehicles = [...searchResult.vehicles];
     if (args.sort === 'lower_price') vehicles.sort((a, b) => Number(a.price_per_day) - Number(b.price_per_day));
     if (args.sort === 'higher_price') vehicles.sort((a, b) => Number(b.price_per_day) - Number(a.price_per_day));

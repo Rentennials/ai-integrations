@@ -37,11 +37,14 @@ export const VehicleSummary = z.object({
   transmission: str,
   passengers: str,
   city: str,
+  province: str,
   timezone: str,
   automatic_approval: bool,
   is_super_host: bool,
   immediate_reserve: bool,
   owner_rating: num,
+  bookings_count: num,
+  price_before_promotion: num,
 });
 
 export const SearchVehiclesResult = z.object({

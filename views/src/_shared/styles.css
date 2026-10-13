@@ -158,12 +158,6 @@ a { color: var(--rt-brand); }
 .rt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 16px; }
 .rt-vcard { display: flex; flex-direction: column; overflow: hidden; }
 .rt-vcard__body { flex: 1; display: flex; flex-direction: column; gap: 10px; padding: 16px; }
-.rt-vcard__specs { display: flex; flex-wrap: wrap; gap: 6px 14px; font: 400 13px/18px var(--rt-font-body); color: var(--rt-text); }
-.rt-vcard__spec { display: inline-flex; align-items: center; gap: 6px; }
-.rt-vcard__spec svg { color: var(--rt-brand); }
-.rt-vcard__price { margin-top: auto; padding-top: 10px; border-top: 1px solid var(--rt-divider); display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: flex-end; justify-content: space-between; }
-.rt-vcard__total { display: flex; flex-direction: column; align-items: flex-end; }
-.rt-vcard__amount { font: 400 20px/26px var(--rt-font-title); color: var(--rt-brand); white-space: nowrap; }
 
 .rt-split { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; }
 .rt-split__main { flex: 3 1 360px; min-width: 0; display: flex; flex-direction: column; gap: 24px; }

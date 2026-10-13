@@ -23,13 +23,33 @@ describe('contracts accept every fixture', () => {
 });
 
 describe('vehicle-results', () => {
-  const html = render(<VehicleResultsContent data={SearchVehiclesResult.parse(fx.searchResult)} actions={actions} />);
+  const html = render(<VehicleResultsContent data={SearchVehiclesResult.parse({ ...fx.searchResult, vehicles: fx.searchResult.vehicles.slice(0, 5) })} actions={actions} />);
+  const one = (index: number) => render(<VehicleResultsContent data={SearchVehiclesResult.parse({ ...fx.searchResult, vehicles: [fx.searchResult.vehicles[index]] })} actions={actions} />);
   it('renders cards, badges only for true and estimate notice', () => {
     expect(html).toContain('Renault Kwid 2018');
     expect(html).toContain('24 coincidencias');
     expect(html.match(/Superhost/g)?.length).toBe(3);
     expect(html).toContain('Precios orientativos');
-    expect(html).toContain('Hay más autos');
+    expect(html).toContain('Ver más autos');
+  });
+  it('shows the discount only when the pre-promotion price is higher', () => {
+    const promo = one(0);
+    expect(promo).toContain('<s class=');
+    expect(promo).toContain('Descuento');
+    expect(promo).toMatch(/ARS\s190\.000/);
+    const noPromo = one(2);
+    expect(noPromo).not.toContain('<s class=');
+    expect(noPromo).not.toContain('Descuento');
+  });
+  it('omits the trips pill when there are no bookings', () => {
+    expect(one(1)).not.toMatch(/>\d+ viajes?</);
+    expect(one(0)).toContain('>12 viajes<');
+  });
+  it('shows only the city when the province is null', () => {
+    const noProvince = one(3);
+    expect(noProvince).toContain('>Guaymallén</span>');
+    expect(noProvince).not.toContain('null');
+    expect(one(0)).toContain('Mendoza - Capital');
   });
   it('keeps null rating, null year, zero price and rejects unsafe images', () => {
     expect(html).toContain('Sin calificaciones');

@@ -57,14 +57,34 @@ test('quote · request booking goes through chat only', async ({ page }) => {
   await expect(page.locator('[data-kind="modelContext"]')).toContainText('"vehicle_id":"000000000000000000000001"');
 });
 
-test('shortlist expands only after explicit click', async ({ page }) => {
+test('show more appends the next page once and removes the control at the end', async ({ page }) => {
   const { app } = await open(page, 'vehicle-results', 'ars', 706, 'light');
   await expect(app.locator('article.rt-vcard')).toHaveCount(5);
-  await app.getByRole('button', { name: 'Ver más', exact: true }).click();
-  await expect(app.locator('article.rt-vcard')).toHaveCount(6);
-  await app.getByRole('button', { name: 'Ver menos', exact: true }).click();
-  await expect(app.locator('article.rt-vcard')).toHaveCount(5);
+  await app.getByRole('button', { name: 'Ver más autos', exact: true }).click();
+  await expect(app.locator('article.rt-vcard')).toHaveCount(8);
+  await expect(page.locator('[data-kind="callServerTool"]').last()).toContainText('"page":2');
+  await expect(app.getByRole('button', { name: 'Ver más autos', exact: true })).toHaveCount(0);
 });
+
+test('choose sends the vehicle id to chat and marks only that card', async ({ page }) => {
+  const { app } = await open(page, 'vehicle-results', 'ars', 706, 'light');
+  await app.locator('article.rt-vcard').first().getByRole('button', { name: 'Elegir', exact: true }).click();
+  await expect(page.locator('[data-kind="sendMessage"]')).toContainText('show_rental_summary');
+  await expect(page.locator('[data-kind="sendMessage"]')).toContainText('000000000000000000000001');
+  await expect(app.locator('article.rt-vcard').first().getByRole('button', { name: 'Elegido', exact: true })).toBeDisabled();
+  await expect(app.locator('article.rt-vcard').nth(1).getByRole('button', { name: 'Elegir', exact: true })).toBeEnabled();
+});
+
+for (const width of WIDTHS) {
+  test(`carousel lane scrolls and the view stays within bounds · ${width}px`, async ({ page }) => {
+    const { app } = await open(page, 'vehicle-results', 'ars', width, 'light');
+    const doc = await app.locator('html').evaluate((el) => ({ sw: el.scrollWidth, cw: el.clientWidth, sh: el.scrollHeight }));
+    expect(doc.sw).toBeLessThanOrEqual(doc.cw);
+    expect(doc.sh).toBeLessThanOrEqual(width === 360 ? 680 : 640);
+    const lane = await app.locator('.rt-carousel__lane').evaluate((el) => el.scrollWidth > el.clientWidth);
+    expect(lane).toBe(true);
+  });
+}
 
 test('images follow runtime server policy with matching CSP', async ({ page }) => {
   const { app, errors } = await open(page, 'vehicle-results', 'runtime', 706, 'light');
@@ -163,11 +183,11 @@ test('date and time edits requote automatically and ignore an older in-flight re
 
 test('search order requeries and keeps airport and no-card filters', async ({ page }) => {
   const { app } = await open(page, 'vehicle-results', 'airport', 706, 'light');
-  await app.getByLabel('Ordenar por', { exact: true }).selectOption('lower_price');
+  await app.getByRole('button', { name: 'Precio menor a mayor', exact: true }).click();
   await expect(page.locator('[data-kind="callServerTool"]')).toContainText('"sort":"lower_price"');
   await expect(page.locator('[data-kind="callServerTool"]')).toContainText('"has_deposit_cover":true');
   await expect(page.locator('[data-kind="callServerTool"]')).toContainText('"pickup_location_id":"000000000000000000000101"');
-  await expect(app.getByLabel('Ordenar por', { exact: true })).toHaveValue('lower_price');
+  await expect(app.getByRole('button', { name: 'Precio menor a mayor', exact: true })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('[data-kind="sendMessage"]')).toHaveCount(0);
 });
 
