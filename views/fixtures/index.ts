@@ -64,6 +64,7 @@ export const vehicleDetail = {
     { id: 'mp_fx_1', name: 'A coordinar con el anfitrión', type: 'PICKUP', price: 0 },
     { id: 'mp_fx_2', location_id: '000000000000000000000101', name: 'Aeropuerto El Plumerillo', type: 'PICKUP', price: 12000 },
     { id: 'mp_fx_3', location_id: '000000000000000000000102', name: 'Terminal de ómnibus', type: 'RETURN', price: 8000 },
+    { id: 'mp_fx_4', location_id: '000000000000000000000103', name: 'Centro de Mendoza', type: 'RETURN', price: 5000 },
   ],
   passengers: '5', transmission: 'Manual', fuel: 'Nafta', doors: '5 Puertas', kms_per_day: '250 kms', timezone: MZA, currency: 'ARS',
   guarantee_deposit: 620000, guarantee_deposit_currency: 'ARS', deductible: 155000, content_warnings: [],
@@ -94,6 +95,8 @@ export const quote = {
   available_extras: [
     { key: 'baby_seat', label: 'Silla de bebé (0 a 3 años)', description: 'Se entrega instalada.', price_by_quantity: [10000, 18000] },
     { key: 'snow_chains', label: 'Cadenas para la nieve', description: null, price_by_quantity: [15000] },
+    { key: 'gps', label: 'GPS portátil', description: 'Con mapas de la provincia.', price_by_quantity: [7000] },
+    { key: 'additional_driver', label: 'Conductor adicional', description: 'Requiere licencia vigente de la persona agregada.', price_by_quantity: [12000, 20000] },
   ],
 };
 
@@ -116,10 +119,10 @@ export const fixtures: Record<string, Record<string, Fixture>> = {
     invalid: { label: 'Inválido', tool: 'search_vehicles', input: {}, result: ok({ cars: [] }) },
   },
   quote: {
-    fast: { label: 'Con Fast', tool: 'get_vehicle_quote', input: quoteInput, result: ok(quote) },
-    noFast: { label: 'Sin Fast · aprobación automática', tool: 'get_vehicle_quote', input: quoteInput, result: ok(quoteNoFast) },
-    error: { label: 'isError', tool: 'get_vehicle_quote', input: quoteInput, result: fail },
-    invalid: { label: 'Inválido', tool: 'get_vehicle_quote', input: quoteInput, result: ok({ total: 'x' }) },
+    fast: { label: 'Con Fast', tool: 'show_rental_summary', input: quoteInput, result: ok(quote) },
+    noFast: { label: 'Sin Fast · aprobación automática', tool: 'show_rental_summary', input: quoteInput, result: ok(quoteNoFast) },
+    error: { label: 'isError', tool: 'show_rental_summary', input: quoteInput, result: fail },
+    invalid: { label: 'Inválido', tool: 'show_rental_summary', input: quoteInput, result: ok({ total: 'x' }) },
   },
 };
 

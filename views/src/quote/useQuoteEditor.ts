@@ -3,15 +3,13 @@ import type { Actions } from '../_bridge/useMcpApp';
 import { Quote as QuoteSchema, QuoteArguments, type Quote } from '../_shared/contracts';
 import { parseWallTime } from '../_shared/format';
 
-export function useQuoteEditor(initialData: Quote, initialArgs: QuoteArguments | null | undefined, actions: Actions, onApplied?: (data: Quote, args: QuoteArguments) => void) {
+export function useQuoteEditor(initialData: Quote, initialArgs: QuoteArguments | null | undefined, actions: Actions) {
   const [current, setCurrent] = useState({ data: initialData, args: initialArgs ?? null });
   const [draft, setDraft] = useState<QuoteArguments | null>(initialArgs ?? null);
   const [pending, setPending] = useState(false);
   const [failed, setFailed] = useState(false);
   const [retry, setRetry] = useState(0);
   const sequence = useRef(0);
-  const appliedCallback = useRef(onApplied);
-  useEffect(() => { appliedCallback.current = onApplied; }, [onApplied]);
   const dirty = JSON.stringify(draft) !== JSON.stringify(current.args);
   const options = Array.from(new Map([
     ...(initialData.included_coverages ?? []), ...(initialData.available_coverages ?? []),
@@ -47,7 +45,6 @@ export function useQuoteEditor(initialData: Quote, initialArgs: QuoteArguments |
           if (parsed?.success) {
             setCurrent({ data: parsed.data, args: validDraft });
             setDraft(validDraft);
-            appliedCallback.current?.(parsed.data, validDraft);
           } else setFailed(true);
         } catch { if (request === sequence.current) setFailed(true); }
         finally { if (request === sequence.current) setPending(false); }
