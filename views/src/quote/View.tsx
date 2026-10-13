@@ -195,7 +195,7 @@ export function QuoteContent({ data: initialData, dates: initialDates, actions, 
                                   <input type="radio" name={`coverage-${type}`} aria-label={x.description ?? t('notAvailable')} checked={checked} onChange={() => editor.changeCoverage(type, x.id!)} />
                                   {x.description ?? t('notAvailable')}
                                 </span>
-                                <span className="rt-price__amount">{m(x.price)}</span>
+                                <span className="rt-price__amount">{x.price === 0 ? t('quote.noCharge') : m(x.price)}</span>
                               </span>
                               {coverageLine(x)}
                             </label>

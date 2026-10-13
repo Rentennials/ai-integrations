@@ -22,6 +22,18 @@ describe('contracts accept every fixture', () => {
   });
 });
 
+describe('quote coverages', () => {
+  const coverageTab = (markup: string) => markup.slice(markup.indexOf('id="quote-panel-coverage"'), markup.indexOf('id="quote-panel-extras"'));
+  it('shows zero-price coverages as no charge instead of zero amounts', () => {
+    const es = coverageTab(render(<QuoteContent data={Quote.parse(fx.quote)} dates={null} actions={actions} />));
+    expect(es).toContain('Sin cargo');
+    expect(es).not.toMatch(/ARS\s0(?![.,\d])/);
+    const en = coverageTab(render(<QuoteContent data={Quote.parse(fx.quote)} dates={null} actions={actions} />, 'en-US'));
+    expect(en).toContain('No charge');
+    expect(en).not.toMatch(/ARS\s0(?![.,\d])/);
+  });
+});
+
 describe('vehicle-results', () => {
   const html = render(<VehicleResultsContent data={SearchVehiclesResult.parse({ ...fx.searchResult, vehicles: fx.searchResult.vehicles.slice(0, 5) })} actions={actions} />);
   const one = (index: number) => render(<VehicleResultsContent data={SearchVehiclesResult.parse({ ...fx.searchResult, vehicles: [fx.searchResult.vehicles[index]] })} actions={actions} />);
