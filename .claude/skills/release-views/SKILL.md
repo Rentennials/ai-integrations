@@ -50,6 +50,6 @@ locally. Do not commit consumer changes without separate permission.
 
 The user installs dependencies, commits the regenerated lockfile, and deploys.
 Check resources/list, resources/read, UI MIME type and CSP, tool resource links,
-and the five views in ChatGPT and Claude. Refresh the connection and use a new
+and the two views (vehicle-results and quote) in ChatGPT and Claude. Refresh the connection and use a new
 conversation after deployment. Keep unexecuted checks explicitly pending.
 An updated views tag and server deployment do not require a new plugin ZIP.

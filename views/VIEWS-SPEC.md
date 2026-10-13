@@ -1,9 +1,9 @@
 # Views de Rentennials · especificación MCP Apps
 
-Estado: cinco views entregadas por el agente de diseño e integradas al repo,
-con contratos y harness ajustados. Lint/typecheck, 47 tests Vitest, build y
-39 tests Playwright verificados con Node 22. Los criterios siguientes siguen
-siendo el contrato de aceptación; fuentes de marca y validación en hosts reales pendientes.
+Estado: dos views (`vehicle-results` y `quote`, paquete 2.0.0) integradas al repo,
+con contratos y harness ajustados. Lint, typecheck, 35 tests Vitest, build y
+36 tests Playwright pasan con Node 22. Los criterios siguientes siguen siendo el
+contrato de aceptación; fuentes de marca y validación en hosts reales pendientes.
 
 ## Traspaso al agente de diseño
 
@@ -13,13 +13,13 @@ de otras integraciones. El setup y `vite.config.ts` ya existen.
 
 Este documento es autocontenido para el diseño: no hace falta acceso al front
 ni a otros repositorios de Rentennials. La sección 2 describe la identidad y
-componentes relevados del portal actual; las secciones 4–8 definen cómo
-componer las cinco views. Las capturas que aporte el usuario complementan esta
+componentes relevados del portal actual; las secciones 4 y 5 definen cómo
+componer las dos views. Las capturas que aporte el usuario complementan esta
 guía, pero no son requisito para empezar. No pedir al usuario código privado
 para resolver decisiones visuales ya detalladas acá.
 
 Cada view necesita `views/src/<view>/index.html` como entrada y su componente
-React/estilos locales. El build raíz compila en orden las cinco entradas con
+React/estilos locales. El build raíz compila en orden las dos entradas con
 mode igual al nombre de view, renombra index.html a <view>.html y genera
 manifest.json en el último build. No modificar los nombres/URI del contrato.
 El harness tiene entrada `views/src/_harness/index.html`, servida por
@@ -31,18 +31,17 @@ No instalar dependencias sin autorización: el usuario ejecuta yarn install
 en la raíz. Usar las dependencias declaradas; no agregar UI kits o paquetes
 de fuentes por iniciativa propia. Los tests de frontend están pedidos.
 
-Capturas OpenAI: generar screenshot-1.png a screenshot-4.png a 706 px para
-resultados, quote, confirmación y reservas. Su publicación en openai/assets/
-la coordina el responsable de integración; entregar las capturas como salida
-de Playwright en views/test-results/, sin editar archivos de openai/. Capturas
-Claude de las cinco views a >=1000 px. No guardar capturas dentro de views/dist/,
-cuyo árbol debe contener exclusivamente cinco HTML y manifest.json.
+Capturas OpenAI: Playwright genera screenshot-1.png a screenshot-4.png a 706 px
+en views/test-results/openai/ (resultados, cotización Viaje, cotización Cobertura
+y resultados ordenados por precio). El paquete las copia a openai/assets/; no se
+cambia openai/plugin.json. Capturas Claude de las mismas cuatro a 1000 px en
+views/test-results/claude/. No guardar capturas dentro de views/dist/, cuyo árbol
+debe contener exclusivamente dos HTML y manifest.json.
 
 La integración usa `_shared/` para componentes/contratos/formato y `_bridge/`
 para el wrapper oficial. Playwright importa `playwright/test`, incluido en el
 paquete declarado. Los mensajes enviados al modelo van en inglés aunque la UI
-esté en español. El origen productivo de pago es `https://mcp.rentennials.app`.
-Vite deriva allowlists de `MCP_UI_IMAGE_HOSTS` y del origen de `MCP_PUBLIC_URL`;
+esté en español. Vite deriva la allowlist de imágenes de `MCP_UI_IMAGE_HOSTS`;
 no es necesario configurar variables VITE adicionales.
 
 Las capturas actuales usan imágenes sintéticas interceptadas por los tests y
@@ -54,25 +53,22 @@ pendientes. No marcar verificación en ChatGPT/Codex real por probar el harness.
 
 ## 1. Contrato de una view
 
-### Ajuste aprobado · cotización integrada (2026-10-09)
+### Ajuste vigente · views 2.0.0 (2026-10-13)
 
-Esta sección prevalece sobre los controles informativos y acciones de cotizar
-por chat de la entrega inicial. Listado abre detalle/quote dentro del widget,
-por lecturas del bridge; Volver conserva listado y cotizaciones aplicadas.
-Quote incluye identidad/foto, fechas/horas editables, extras con cantidades,
-puntos de retiro/devolución, cupón y una cobertura por tipo. Selección visible,
-precio de referencia y aviso de cambios sin aplicar; precio final solo de tool.
-Actualizar cotización aplica el borrador; error conserva precio anterior sin
-permitir reserva con opciones nuevas pendientes. Solicitar reserva manda al
-modelo los argumentos completos para que recotice y pida confirmación antes de
-escribir. No se crea ninguna reserva desde la UI.
-Orden por defecto Relevancia de la plataforma, nunca una recomendación personal;
-menor/mayor tarifa diaria no garantiza el menor/mayor total del viaje. Cambiar
-orden vuelve a consultar conservando filtros. Puntos globales y por vehículo
-se asocian por identidad real, no por nombre o similitud de IDs.
+Solo hay dos views. `vehicle-results` abre con `search_vehicles` y permite
+ordenar, ampliar y elegir un auto en un carrusel. `quote` abre con
+`show_rental_summary` y permite editar fechas, puntos, coberturas, extras y cupón;
+recotiza con `get_vehicle_quote`, que no tiene widget propio. Elegir un auto
+devuelve la decisión al chat, y el resumen pide confirmación en el chat antes de
+cualquier reserva. No se crea ninguna reserva ni cobro desde la UI.
+El orden “Promociones” es el de la plataforma, nunca una recomendación personal;
+menor o mayor tarifa diaria no garantiza el menor o mayor total del viaje.
+Cambiar orden vuelve a consultar conservando filtros. Puntos globales y por
+vehículo se asocian por identidad real, no por nombre o similitud de IDs.
 Origen de imágenes declarado por servidor/host también en lecturas locales;
 HTTPS y CSP exactos. Un 404 conserva fallback. Configuración de ambiente fuera
-del repo público. Se preservan las cinco URI y los clientes sin UI.
+del repo público. Las URI son `ui://rentennials/vehicle-results` y
+`ui://rentennials/quote`; los clientes sin UI reciben solo texto.
 
 Cada recurso `ui://rentennials/<view>` es un HTML5 autocontenido con JavaScript,
 CSS y assets de marca inline. MIME: `text/html;profile=mcp-app`. Se ejecuta en
@@ -249,8 +245,8 @@ en badges, texto sobre campos y estados de foco, no solo en fondo blanco.
 Definir tokens oscuros legibles y aplicar cambios de `hostContext.theme`.
 Respetar locale es/en del host; sus fechas no reemplazan la zona del vehículo.
 Responsive desde 360 px, pruebas a 360, 706 y 1000 px sin overflow horizontal.
-Componentes base: tarjeta de auto, badge, fila de precio, bloque de fechas,
-botones primario/secundario, aviso, galería y contador.
+Componentes base: tarjeta de auto, badge, fila de precio, panel de total,
+botones primario/secundario, aviso y estados vacío o de error.
 
 Accesibilidad AA: contraste 4.5:1 para texto normal, foco visible, nombres
 accesibles, navegación por teclado, alt de imágenes y estados anunciados.
@@ -261,42 +257,39 @@ Distribución a los tres anchos de prueba:
 
 - **360 px:** una columna; CTA ancho completo; secciones apiladas. Fechas en dos
   celdas solo mientras sigan legibles; apilarlas si locale/zoom lo exige.
-- **706 px:** resultados en dos columnas; detalle puede separar galería y
-  atributos si caben sin comprimir texto. Cotización y confirmación mantienen
-  un resumen claro, sin forzar un checkout de escritorio dentro del iframe.
-- **1000 px:** resultados en tres columnas; detalle en dos áreas, galería y
-  resumen; cotización puede separar desglose y total. Respetar max-width del
-  contenedor del host y no agregar columnas vacías para simular un sitio web.
+- **360 px:** resultados en carrusel con tarjetas de 240 px; resumen en una columna.
+- **706 px:** resultados en carrusel con tarjetas de 260 px y flechas; resumen en
+  dos columnas, con el total en el panel lateral (desde 640 px).
+- **1000 px:** resultados en carrusel con flechas; resumen en dos columnas, con el
+  total en el panel lateral. Respetar max-width del contenedor del host y no
+  agregar columnas vacías para simular un sitio web.
 
-Estas columnas dependen del ancho **del iframe**, no del tamaño de la pantalla
-del navegador. Las cards usan min-width: 0 para evitar overflow. Los carruseles
-se reservan para la galería de una sola unidad, con navegación explícita;
-no ocultar toda la selección de vehículos detrás de un swipe obligatorio.
+Estas medidas dependen del ancho **del iframe**, no del tamaño de la pantalla
+del navegador. Las cards usan min-width: 0 para evitar overflow. Los resultados
+usan carrusel horizontal con navegación explícita y el botón Elegir visible en
+cada tarjeta; no ocultan la selección detrás de un swipe obligatorio.
 
 ### 2.6. Biblioteca de componentes esperada
 
 | Componente | Especificación visual y comportamiento |
 | --- | --- |
-| VehicleCard | Radio 20 px, borde 1 px, sombra suave; imagen superior 4:3 con object-cover; cuerpo 16 px; nombre violeta, ciudad y características compactas; total + moneda destacados, duración debajo; acciones separadas. |
+| VehicleCard (resultados) | Radio 20 px, borde 1 px, sombra suave; imagen superior 16:10 con object-cover; badge Superhost y pills de rating y viajes sobre la foto; cuerpo 12 px con nombre violeta, lugar, badges de descuento y aprobación, total + moneda destacados y días debajo; una sola acción Elegir. |
 | Badge | Pill radio 9999 px, padding 4 px vertical / 8–12 px horizontal; label 12 px y un icono opcional; wraps entre badges, no dentro de una palabra. Superhost, aprobación automática y disponibilidad inmediata son conceptos separados. |
-| DateBlock | Radio 16 px, borde 2 px gris de campo; Desde/Hasta en dos celdas con divisor; fecha y hora claras y timezone debajo. Sin selector de fechas en esta entrega. |
 | PriceRow | Grid etiqueta flexible / monto auto, gap 12 px, baseline alineada; etiqueta puede ocupar varias líneas y monto permanece completo. Líneas negativas identificadas como descuento. |
 | TotalPanel | Banda de fondo #444 en claro, radio 16 px o integrada en el panel; label Total y cifra 28–32 px blanca, moneda explícita. Seña, saldo y depósito fuera de esa banda y bien rotulados. |
 | PrimaryButton | Altura mínima 44 px, preferida 46–48 px; radio pill; fondo primario, texto blanco 14 px/500; padding horizontal 20 px. Hover secundario, foco visible exterior; loading con spinner sin cambiar ancho. |
 | SecondaryButton | Misma altura, fondo transparente, borde/divisor y texto de énfasis; hover tenue violeta. No dar a ambas acciones la misma prominencia visual. |
 | Notice | Caja radio 16 px, padding 12–16 px; icono + título + explicación. Usar texto además del color; owner conditions truncadas son aviso, no prueba de fraude ni error de pago. |
-| Gallery | Foto principal con radio 16–20 px; anterior/siguiente accesibles, indicador “1 de N”, miniaturas cuando hay espacio. Sin autoplay; layout estable antes y después de cargar. |
-| Countdown | Reloj + etiqueta + mm:ss; números tabulares y texto accesible, sin anunciar cada segundo a un lector de pantalla. Cambio a expirado visible y CTA de pago deshabilitado. |
 | Empty/Error | Icono sobrio, título y explicación breve; layout del mismo sistema visual, sin ilustración gigante. Error de una acción no borra un resultado válido previo, pero lo distingue del intento fallido. |
 
 Skeletons de imagen y líneas con `#fafafa`/`#f1f1f1` en claro, tonos auxiliares
 en oscuro, manteniendo proporciones. Animación opcional suave, desactivada con
 reduced-motion; evitar loaders que reemplacen todo el iframe durante una acción.
 
-Textos de referencia es/en: “Ver detalle / View details”, “Cotizar / Get a quote”,
-“Solicitar reserva / Request booking”, “Pagar en Rentennials / Pay on Rentennials”,
-“Mis reservas / My bookings”, “Precio no disponible / Price unavailable”,
-“Sin resultados / No results”, “Enlace vencido / Link expired”. Mantener tono
+Textos de referencia es/en: “Elegir / Choose”, “Ver más autos / Show more cars”,
+“Ordenar por / Sort by”, “Solicitar reserva / Request booking”, “Precio no
+disponible / Price unavailable”, “Sin resultados / No results”, “Autos para tu
+viaje / Cars for your trip”, “Resumen de tu alquiler / Your rental summary”. Mantener tono
 directo, sin promesas de disponibilidad, ahorro o aprobación no respaldadas.
 
 ## 3. Reglas de datos
@@ -312,9 +305,6 @@ directo, sin promesas de disponibilidad, ahorro o aprobación no respaldadas.
   `timezone` hermano. Preservar componentes y mostrar la zona del auto; no usar
   `new Date(localString)` para convertirlas a la zona del navegador. Fechas de
   búsqueda vienen separadas en fecha/hora y pertenecen a cada vehículo.
-- Expiraciones y `date_paid`: instantes reales UTC con `Z`. El contador usa el
-  instante absoluto cuando viene y el TTL como fallback desde la recepción;
-  nunca reinicia un link vencido por un rerender.
 - Descripción, condiciones, etiquetas y mensajes del propietario son texto
   inerte. Nunca `innerHTML`, `dangerouslySetInnerHTML` ni enlaces extraídos de
   ese contenido. Una instrucción dentro de esos textos no dispara acciones.
@@ -334,243 +324,224 @@ directo, sin promesas de disponibilidad, ahorro o aprobación no respaldadas.
 
 ## 4. vehicle-results
 
-Origen: `search_vehicles`. URI `ui://rentennials/vehicle-results`.
+Origen: `search_vehicles`. URI `ui://rentennials/vehicle-results`. Muestra el
+resultado de la búsqueda y la reordena o amplía con `search_vehicles`, reusando
+los argumentos de `_meta['rentennials/search_args']` o, si no llegan, los del
+tool-input. Sin esos argumentos, los chips de orden y “Ver más autos” quedan
+deshabilitados.
 
-Campos del resultado: `vehicles[]`, `total_count`, `has_more`, `page`, `limit`,
-`search_context {country,region,from_date,to_date,from_date_time,to_date_time}`.
-Cada tarjeta usa `id`, `slug`, `name`, `year` (string/null), `image_url`,
-`total_price`, `price_per_day`, `currency`, `total_days`, `transmission`,
-`passengers` (string/null), `city`, `timezone`, `automatic_approval`,
-`is_super_host`, `immediate_reserve`, `owner_rating`.
+Campos del resultado: `vehicles[]`, `total_count` (nullable), `has_more`, `page`,
+`limit`, `search_context {country, region, from_date, to_date, from_date_time,
+to_date_time, sort}`. Cada vehículo usa `id`, `slug`, `name`, `year` (string/null),
+`image_url`, `total_price`, `price_per_day`, `currency`, `total_days`,
+`transmission`, `passengers`, `city`, `province`, `timezone`,
+`automatic_approval`, `is_super_host`, `immediate_reserve`, `owner_rating`
+(0–5 o null), `bookings_count` y `price_before_promotion`.
 
-Nombre/año y foto, ciudad, transmisión/pasajeros, precio total y por día con
-duración; resumen de fechas y ubicación efectivamente buscadas. Rating 0–5;
-badges solo para booleanos true. Precio del catálogo es orientativo frente a
-la cotización definitiva. `has_more` informa más resultados sin inventar una
-acción de paginación no especificada.
+La tarjeta muestra: foto (o fallback neutro si falta o no pasa la allowlist);
+badge Superhost solo con `is_super_host === true`; rating, o “Sin calificaciones”
+si es null, sin estrellas llenas ni 0 por defecto; chip de viajes solo si
+`bookings_count` es mayor que 0; nombre con año, y lugar `province - city` o
+“Ciudad no informada”; descuento y precio anterior solo si
+`price_before_promotion` supera `total_price`; badge de aprobación automática solo
+con `true`; importe total con moneda y “total x N días”, o “Precio no disponible”
+si es null. `transmission`, `passengers`, `price_per_day`, `timezone`, `slug` e
+`immediate_reserve` llegan en el contrato pero la tarjeta actual no los muestra.
+El precio de catálogo es orientativo: la view lo aclara con una nota fija.
 
-**Composición visual:** encabezado “Autos para tu viaje”, resumen de ubicación
-y fechas buscadas, cantidad de coincidencias y grilla de tarjetas. Cada tarjeta,
-en orden: foto, badges válidos, nombre/año, ciudad, transmisión/pasajeros,
-total/moneda/duración y botones Ver detalle (secundario) / Cotizar (principal).
-La imagen_url única del resultado no se convierte en una galería ficticia.
-Rating nullable: no dibujar cinco estrellas llenas ni usar 0 por defecto.
-En 360 px cada card ocupa el ancho útil; a 706/1000 px mantener alturas de
-foto iguales y acciones alineadas, dejando crecer los textos cuando se expanden.
+**Acciones**
 
-- Ver detalle: `callServerTool({name:'get_vehicle', arguments:{slug}})` solo
-  con slug presente. El resultado se presenta como detalle, no como búsqueda.
-- Cotizar: `sendMessage` con intención explícita de cotizar, referencia del
-  vehículo y contexto de fechas conocido. Nunca reservar en ese mensaje.
-- Vacío: informar que no hay coincidencias; no fabricar un vehículo ni precio.
+- Orden: cinco chips en fila horizontal, sin menú: Promociones (`default`),
+  Precio menor a mayor (`lower_price`), Precio mayor a menor (`higher_price`),
+  Más solicitados (`amount_of_bookings`) y Mejor rankeado (`average_rating`).
+  Cada chip llama `search_vehicles` con los mismos filtros, el `sort` elegido,
+  `page: 1` y `limit: 5`. El chip activo lleva `aria-pressed`. Mientras consulta,
+  los chips se deshabilitan y el carril muestra tres esqueletos.
+- Ver más autos: `search_vehicles` con la página siguiente y `limit: 5`. Agrega
+  las tarjetas sin repetir `id`. Aparece al final del carrusel solo si
+  `has_more` es true y hay menos de 15 vehículos cargados.
+- Elegir: `sendMessage` en inglés con el `id` del vehículo. Pide al modelo
+  completar lo que falte (puntos, coberturas, extras) y llamar
+  `show_rental_summary` una sola vez con argumentos completos. La tarjeta elegida
+  pasa a “Elegido” y queda deshabilitada; las demás siguen disponibles. No reserva
+  ni cobra.
+- Error de acción: si una consulta falla, aparece “No pudimos completar la
+  acción” y el resultado anterior sigue visible con esa advertencia.
+- Vacío: sin `vehicles`, la view informa que no hay coincidencias y no dibuja
+  tarjetas ni precios.
 
-## 5. vehicle-detail
+**Composición visual:** encabezado “Autos para tu viaje”, chips con lugar y fechas
+buscadas, conteo de coincidencias (o “N autos” si `total_count` es null), fila de
+chips de orden y carrusel. Cada tarjeta muestra la foto 16:10 con los badges y
+pills sobre ella, luego nombre, lugar, descuento, total y el botón Elegir.
+`has_more` sin tarjeta siguiente se informa con texto que pide ver más en el chat.
 
-Origen: `get_vehicle`. URI `ui://rentennials/vehicle-detail`.
+**Layout**
 
-Campos: `id`, `slug`, `name`, `year`, `image_urls[]`, `description`, `disclaimer`,
-`features[]{key,label,value}`, `meeting_points[]{id,name,type,price}`,
-`passengers`, `transmission`, `fuel`, `doors`, `kms_per_day`, `timezone`,
-`currency`, `guarantee_deposit`, `guarantee_deposit_currency`, `deductible`,
-`content_warnings[]`.
+- Carrusel horizontal de 3 a 8 ítems con la siguiente tarjeta asomando. Tarjetas
+  de 260 px (240 px bajo 400 px de ancho) y 12 px de separación, con snap.
+  Flechas anterior y siguiente desde 640 px.
+- Chips en vez de menús. Sin scroll vertical interno: la view crece en alto; el
+  único desplazamiento interno es horizontal, en el carrusel y en la fila de chips.
+- Alturas máximas validadas por Playwright: carrusel de 640 px o menos a 706 y
+  1000 px, y de 680 px o menos a 360 px. Sin overflow horizontal de la página.
 
-Galería ordenada con controles por teclado; sin fotos, placeholder. Features
-con value string `"false"` nunca se listan como amenities habilitados;
-`"true"` se presenta como habilitado. Valores desconocidos siguen como texto.
-Meeting points separados por `PICKUP` y `RETURN` con suplemento y moneda.
-Depósito y franquicia son conceptos distintos del precio del alquiler.
+## 5. quote
 
-Avisos para `disclaimer_truncated`, `features_invalid`, `images_invalid` y
-otros warnings sin inferir contenido ausente. Esta tool no devuelve precio.
-Cotizar usa `sendMessage` con vehículo y fechas solo si llegaron como contexto;
-si faltan, solicita cotización para que el chat pregunte las fechas.
+Origen: `show_rental_summary`, la tool que abre la view. El modelo la llama una
+sola vez con los datos completos del viaje. Recotizaciones: `get_vehicle_quote`,
+llamada por la view con `callServerTool`. URI `ui://rentennials/quote`.
 
-**Composición visual:** nombre del vehículo arriba; galería y resumen de
-características debajo. Usar celdas compactas de atributos presentes, sin
-repetir año/transmisión/pasajeros tanto en cabecera como en la misma grilla.
-Seguir con Descripción, Condiciones del propietario, Retiro/devolución y bloque
-Depósito/franquicia. CTA Cotizar al final del resumen y antes de textos extensos
-si hace falta, con una sola acción primaria visible por área. Sin precio de
-alquiler, avatar de propietario, mapa, comentarios, badge GPS o coberturas
-inventadas: la referencia del portal solo aporta la apariencia.
+Tool-input (`QuoteArguments`): `vehicle_id` (24 hex), `from_date` y `to_date`
+(`YYYY-MM-DD`), `from_date_time` y `to_date_time` (`HH:mm`, opcionales), `coupon`,
+`covers[]`, `pickup_meeting_point_id`, `return_meeting_point_id` y
+`extra_services[{key, quantity}]`.
 
-## 6. quote
+Resultado (`Quote`): `vehicle {id, slug, name, year, image_url, country, timezone}`,
+`availability` (`available` | `unknown`), `meeting_points {pickup[], return[]}` con
+`{id, location_id, name, type, price}`, `breakdown[]{concept, description,
+unit_amount, quantity, amount}`, `total`, `currency`, `total_days`,
+`price_per_day`, `discount`, `discount_code`, `pay_now`, `pay_on_pickup`,
+`security_deposit`, `security_deposit_currency`, `timezone`,
+`automatic_approval`, `payment_fast` (nullable), `included_coverages[]`,
+`available_coverages[]` (con `id`) y `available_extras[]{key, label,
+description, price_by_quantity[]}`.
 
-Origen: `get_vehicle_quote`. URI `ui://rentennials/quote`.
+**Reglas de datos**
 
-Campos: `breakdown[]{concept,description,unit_amount,quantity,amount}`, `total`,
-`currency`, `total_days`, `price_per_day`, `discount`, `discount_code`, `pay_now`,
-`pay_on_pickup`, `security_deposit`, `security_deposit_currency`, `timezone`,
-`automatic_approval`, `payment_fast`.
+- `amount` del breakdown es el importe normalizado por el servidor. Con
+  `unit_amount` null (cargos acumulados) no se muestra cantidad × precio. No se
+  suma el breakdown para reemplazar `total`.
+- El descuento ya está dentro del total; no se resta otra vez.
+- `price_by_quantity[i]` es el total para i+1 unidades; no se asume precio lineal.
+- Coberturas incluidas y disponibles se muestran separadas. Extras y coberturas
+  disponibles no se suman al total automáticamente.
+- `payment_fast` se muestra solo si `automatic_approval` y
+  `payment_fast.available` son true: importe ahora, saldo y fecha local del cobro
+  automático en la zona del auto. Sin fecha, aviso sin fecha. Null equivale a no
+  disponible.
+- Puntos de retiro y devolución se asocian por `id` real. Un punto del borrador
+  que ya no llega en la respuesta se rotula como no disponible.
 
-`amount` es el importe normalizado por el servidor. `unit_amount` es null para
-cargos acumulados (horas y extras); no mostrar cantidad × precio en esos casos.
-No sumar el breakdown para reemplazar el total de pricing.
+**Pestañas**
 
-`included_coverages[]{type,description,price,deposit_amount,max_deductible,
-luggage_theft_coverage}`; `available_coverages[]` tiene esos campos más `id`.
-`available_extras[]{key,label,description,price_by_quantity[]}`: la posición i
-representa precio total para i+1 unidades; no asumir precio unitario lineal.
+- Viaje: fechas y horas de retiro y devolución, puntos de retiro y devolución
+  (si llega `meeting_points`) y cupón.
+- Cobertura (solo si hay coberturas): incluidas como chips; opcionales agrupadas
+  por tipo (daños, depósito, reserva), con una opción por grupo mediante radio.
+  Cada opción muestra precio y depósito o franquicia.
+- Extras (solo si hay extras): cantidad de 0 a N, con el precio total de cada
+  cantidad.
+- Cambiar de pestaña no recotiza.
 
-Desglose en orden del servidor y total destacado; descuento ya descontado,
-no restarlo otra vez. Coberturas incluidas y disponibles claramente separadas;
-extras y coberturas disponibles no se suman al total automáticamente.
-Los selectores editan argumentos de cotización, no compran ni ejecutan escrituras.
-Fechas, horarios, coberturas, extras/cantidades, puntos y cupón recotizan por el
-bridge oficial tras 500 ms sin cambios y con entradas válidas. No se exige botón
-Actualizar. Edición permitida durante una lectura; respuestas anteriores no
-reemplazan la última selección. Un error requiere corrección o Reintentar y
-permite Descartar. El último total confirmado se distingue de cambios pendientes.
-Reserva bloqueada durante espera, lectura, entradas inválidas o error pendiente.
+**Recotización**
 
-`payment_fast` es null o `{available,amount_now,remaining_amount,currency,
-remaining_charge_date}`. Null equivale a no disponible. Con available true,
-mostrar importe ahora, saldo y fecha local del cobro automático, distinguiéndolo
-del saldo a pagar al retirar. No prometer un número fijo de horas antes del viaje.
+- Cada cambio válido (fechas coherentes, extras dentro de la oferta, argumentos
+  válidos) llama `get_vehicle_quote` 500 ms después del último cambio.
+- Mientras hay cambios sin aplicar o una consulta en curso, el total aplicado se
+  rotula “Total anterior” y un aviso indica el estado.
+- Las respuestas tardías se descartan: cuenta solo la última selección.
+- Fechas inválidas (devolución igual o anterior al retiro): aviso “Revisá las
+  fechas”, sin llamada.
+- Error de recotización, incluido un cupón rechazado: aviso con Reintentar
+  cotización y Descartar cambios. El total aplicado no cambia.
+- Descartar cambios vuelve a los últimos argumentos aplicados.
 
-Los argumentos originales contienen `vehicle_id` y fechas: llegan por
-tool-input, no en el resultado. Mantenerlos como contexto para el mensaje.
-Reservar emite `sendMessage` con intención de reservar y pide confirmación
-en el chat. Nunca llama `create_booking_request`, nunca fija confirmed=true.
+**Panel de total y desglose**
 
-**Composición visual:** título “Tu cotización”, contexto de fechas solo cuando
-esté disponible en tool-input, desglose en PriceRows, coberturas incluidas,
-opcionales/extras editables para recotizar y TotalPanel. Luego filas “A pagar ahora”,
-“Al retirar” y “Depósito de garantía” separadas del total. Payment Fast en
-Notice/panel violeta tenue, con importe inicial y siguiente cobro explícitos.
-Cerrar con modo de aprobación y CTA de solicitud de reserva mediante chat.
-En 360/706 px usar lectura vertical; a 1000 px resumen/CTA en columna lateral
-opcional, en flujo normal sin barra sticky. Ningún control que parezca comprar
-una cobertura, ingresar tarjeta o confirmar un cobro directamente.
+- Panel lateral con el total aplicado, días, precio por día y descuento. Debajo,
+  “A pagar ahora”, “Al retirar” y “Depósito de garantía”, fuera de la banda del
+  total, más el modo de aprobación (automática o a confirmar).
+- Payment Fast: aviso compacto, solo cuando corresponde según la regla de datos.
+- Desglose plegado por defecto (“Ver desglose”): filas por concepto, con cantidad
+  × precio unitario cuando corresponde. Importes negativos se rotulan como
+  descuento.
 
-## 7. booking-confirmation
+**Solicitar reserva**
 
-URI `ui://rentennials/booking-confirmation`. Dos resultados diferentes:
+- Deshabilitado durante recotización, espera, entradas inválidas, error o si no
+  hay total.
+- Al pulsar, `updateModelContext` registra los argumentos aplicados y el total.
+  Después, `sendMessage` en inglés pide recotizar con `get_vehicle_quote` usando
+  exactamente esos argumentos, mostrar el resumen completo y pedir confirmación
+  explícita antes de `create_booking_request`. Si el envío falla, aparece “No
+  pudimos completar la acción”.
+- Nunca llama `create_booking_request`, nunca fija `confirmed=true` y no usa
+  `callServerTool` de escritura.
 
-| Origen | Campos |
-| --- | --- |
-| `create_booking_request` | `booking_id`, `booking_number`, `vehicle_name`, `mode`, `status`, `from`, `to`, `timezone`, `total`, `currency`, `total_matches_quote`, `pay_now`, `payment_url`, `payment_expires_at`, `payment_expires_in_seconds`, `payment_plan`, `remaining_amount`, `remaining_charge_date`, `next_step`, `manage_url` |
-| `pay_booking` | `booking_id`, `booking_number`, `vehicle_name`, `amount`, `currency`, `payment_url`, `payment_url_expires_at`, `payment_url_expires_in_seconds`, `next_step`, `manage_url` |
+**Composición visual:** título “Resumen de tu alquiler”, cabecera con miniatura,
+nombre y fechas, pestañas, contenido de la pestaña y panel de total. Sin barra
+fija ni scroll interno.
 
-`pay_booking` NO devuelve status, fechas, mode ni plan. No asumirlos ni fabricar
-un estado de reserva. Diferenciar el importe a pagar de un total del alquiler.
-Número visible de reserva, nombre, estado/fechas cuando realmente existen,
-siguiente paso como texto y resumen monetario.
+**Layout**
 
-Modo request: espera de aprobación, sin inventar link ni contador. Modo instant:
-link y contador; pago Fast indica saldo y cobro automático. Si
-`total_matches_quote === false`, mostrar aviso de cambio del total.
+- Menos de 640 px: columna única (pestañas, contenido y total en ese orden).
+  Desde 640 px: dos columnas, contenido principal y panel lateral de 280 px.
+- Alturas máximas validadas por Playwright: 1300 px a 360 px, 820 px a 706 px y
+  720 px a 1000 px. Desde 640 px diferencia de altura entre columnas de 160 px o
+  menos. Sin overflow horizontal.
+- Ningún control parece comprar una cobertura, cargar una tarjeta o confirmar un
+  cobro: los controles solo editan argumentos de cotización.
 
-Pagar emite `openLink({url:payment_url})`, solo tras clic. Validar HTTPS y origen
-de pago autorizado por entorno; no abrir links de texto del propietario.
-Al vencer, deshabilitar el botón y mostrar expiración. El vencimiento del link
-de pay_booking no implica liberar una reserva: no mostrar ese mensaje.
-Administrar usa `openLink` con `manage_url` seguro y permitido.
+## 6. Entregables y aceptación
 
-**Composición visual:** aviso de estado con icono semántico, número de reserva
-y vehículo; fechas si existen, resumen de total/importe a pagar, siguiente paso
-y acciones. `request` usa “Solicitud enviada / Request sent” y espera de
-aprobación, no “Reserva confirmada”. `instant` provisional usa “Pendiente de
-pago / Awaiting payment”; recibir un link no demuestra que se pagó. Para
-pay_booking el título es “Enlace de pago / Payment link” y no se adivina status.
-Agrupar countdown y botón Pagar en un mismo bloque visible, con icono de enlace
-externo y texto “Se abre fuera del chat”. Si venció, sustituir el contador por
-aviso de expiración sin mostrar un check de éxito. Diseño compacto de una
-columna; no copiar el formulario Stripe del portal al iframe.
+Implementación en `views/src/<view>/` (`vehicle-results` y `quote`), wrapper
+oficial en `_bridge/`, harness en `_harness/` y fixtures sintéticas en
+`views/fixtures/`. Los contratos de origen (`search_vehicles`,
+`show_rental_summary` y `get_vehicle_quote`) se representan sin homogeneizar
+campos que no existen.
 
-## 8. my-bookings
+Build secuencial por view con React/Vite/singlefile: dos HTML sin JS/CSS ni fuentes
+externos. `dist/manifest.json` es un array de
+`{name, uri, file, csp:{connectDomains:[], resourceDomains:[...]}}`, sin rutas
+que escapen de dist/. Paquete `rentennials-mcp-views` versión 2.0.0, con
+`files:["dist"]`. El árbol de distribución contiene exclusivamente los dos HTML y
+`manifest.json`.
 
-URI `ui://rentennials/my-bookings`. `list_bookings` devuelve
-`bookings[]{booking_id,booking_number,status,vehicle_name,from,to,timezone,
-total,currency,amount_to_pay_now,needs_payment,paid,is_extension}`, `page`,
-`total_count` (nullable), `has_more`.
+Criterios de aceptación:
 
-`get_booking` devuelve UNA reserva, no `bookings[]`: esos campos más
-`amount_to_pay_now_currency`, `subtotal`, `discount_total`, `extra_services_total`,
-`date_paid`, `cancelled`, `pickup_city`, `included_kms_per_day`,
-`extra_services[]{name,quantity,price}`, `coverages[]{name,price}`,
-`pickup_meeting_point`/`return_meeting_point`,
-`security_deposit {amount,currency,paid}` (nullable),
-`next_instalment {amount,currency,debit_date}` (nullable), `contract_url`.
-
-Normalizar solo la presentación del resultado individual a tarjeta/detalle.
-Estado, número visible, auto, fechas en zona local y total; distinguir pagado,
-importe pendiente y extensión. Nunca interpretar null de total_count como 0.
-
-- Ver detalle: `callServerTool({name:'get_booking',arguments:{booking_id}})`;
-  no buscar por booking_number ni por posición visual.
-- Pagar: `sendMessage` con referencia de reserva. Solo ofrecer si
-  needs_payment true, paid false e is_extension false. Nunca `tools/call
-  pay_booking` desde la view, aunque el PDF más antiguo lo propone.
-- Lista vacía: informar sin inventar reservas; paginación adicional pendiente
-  de conversación, sin agregar nuevas acciones fuera de este alcance.
-
-**Composición visual:** encabezado “Mis reservas”, tarjetas de una columna con
-número de solicitud pequeño, nombre de auto destacado, badge de estado textual,
-fechas, total e importe pendiente cuando corresponda. Acciones abajo a 360 px;
-a 706/1000 px pueden alinearse al costado si el contenido sigue legible. Lista
-de reservas sin foto: estos resultados no incluyen image_url, ni avatar, ni
-rating; no reutilizar imágenes de otro auto para imitar el portal.
-El detalle de get_booking amplía con desglose, coberturas, puntos de encuentro,
-depósito y cuota si existen. El marcador Extensión debe ser visible y excluir
-el CTA Pagar. Si status es null, “Estado no disponible”; no inferirlo a partir
-del color o de un monto.
-
-## 9. Entregables y aceptación
-
-Implementación en `views/src/<view>/`, wrapper oficial en `_bridge/`, harness
-en `_harness/`, fixtures sintéticas en `views/fixtures/`. Los siete contratos
-de origen se representan sin homogeneizar campos que no existen.
-
-Build secuencial por view con React/Vite/singlefile: cinco HTML sin JS/CSS ni
-fuentes externos. `dist/manifest.json` array de
-`{name,uri,file,csp:{connectDomains:[],resourceDomains:[...]}}`, sin rutas que
-escapen dist/. Paquete `rentennials-mcp-views`, `files:["dist"]`.
-
-Criterios a ejecutar después de instalación manual:
-
-- `yarn workspace rentennials-mcp-views build` produce las cinco views.
-- Vitest: ARS/USD, zonas distintas a navegador, null/false/0, textos largos,
-  imágenes inválidas y render de cada view con fixtures de ambas variantes.
-- Playwright: cinco views, 360/706/1000 px, claro/oscuro; handshake real con
-  AppBridge, mensajes correctos, sin errores de consola/CSP ni red propia.
-- El harness web usa sandbox proxy de origen diferente y aplica CSP real;
-  no se valida solo con un mock directo de React o postMessage.
-- Capturas de resultados, cotización, confirmación y reservas a 706 px para
-  OpenAI; capturas de las cinco views a 1000 px o más para Claude.
-- No considerar esas capturas evidencia de ChatGPT/Codex: los casos de
-  revisión se ejecutan por separado en clientes reales.
+- `yarn workspace rentennials-mcp-views build` produce las dos views y el manifest.
+- Vitest: ARS/USD, zonas distintas a las del navegador, null/false/0, textos
+  largos, imágenes inválidas y render de cada view con fixtures de ambas variantes.
+- Playwright: dos views, 360/706/1000 px, claro/oscuro; sin errores de consola ni
+  red propia; handshake con AppBridge, mensajes y llamadas correctas.
+- El harness web usa sandbox proxy de origen diferente y aplica CSP real; no se
+  valida solo con un mock directo de React o postMessage.
+- Capturas OpenAI a 706 px en `views/test-results/openai/`, numeradas así:
+  1. resultados (`vehicle-results`, fixture `ars`);
+  2. cotización, pestaña Viaje;
+  3. cotización, pestaña Cobertura;
+  4. resultados tras elegir el orden “Precio menor a mayor”.
+  El paquete las copia a `openai/assets/` sin tocar `openai/plugin.json`.
+- Capturas Claude de las mismas cuatro pantallas a 1000 px en
+  `views/test-results/claude/screenshot-1..4.png`.
+- No considerar esas capturas evidencia de ChatGPT/Codex: los casos de revisión
+  se ejecutan por separado en clientes reales.
 
 ### Material visual que puede aportar el usuario
 
 Para ajustar fidelidad, solicitar este conjunto de referencias, con nombre de
-pantalla y ancho aproximado. Son complementarias a los tokens/contratos de
-este MD; no requieren compartir acceso al front:
+pantalla y ancho aproximado. Son complementarias a los tokens y contratos de
+este documento; no requieren compartir acceso al front:
 
 1. **Listado de autos:** una captura de escritorio con 2–3 tarjetas completas,
    precios y badges; una de móvil con una tarjeta y sus bordes visibles.
-2. **Detalle de auto:** galería/cabecera/atributos y una captura de las secciones
-   de descripción, condiciones y puntos de entrega.
-3. **Cotización/resumen de reserva:** desglose, seña/saldo/depósito, total y CTA;
+2. **Cotización/resumen de reserva:** desglose, seña/saldo/depósito, total y CTA;
    incluir el aviso Rentennials Fast si aparece para ese caso.
-4. **Resultado de reserva y enlace de pago:** estado, siguiente paso y tiempo de
-   vencimiento si lo muestra. No hace falta el formulario de tarjeta.
-5. **Mis viajes/reservas:** una tarjeta pendiente y una pagada con sus acciones;
-   versión móvil si difiere mucho. Una referencia oscura, si existe, es útil.
-6. **Assets:** logo completo SVG/PNG y, si están disponibles, archivos de Bree
+3. **Assets:** logo completo SVG/PNG y, si están disponibles, archivos de Bree
    Serif/Poppins con permiso de uso y licencia para embeberlos. Una captura de
    texto no reemplaza los archivos de fuente.
 
 Compartir capturas recortadas al producto, con datos personales y referencias
-reales anonimizados. Claude Design debe usarlas para forma/color/composición,
+reales anonimizados. Claude Design debe usarlas para forma, color y composición,
 no para copiar datos, inventar campos ausentes ni trasladar acciones del portal
 que aquí se ejecutan por el chat. Si una captura muestra un dato o control fuera
 del contrato, conservar solo la referencia visual de su componente.
 
-Revisión visual final: identidad reconocible por el isotipo/violeta/tipografía,
-fotos protagonistas cuando existen, jerarquía de precio/fechas, radios y espacios
-consistentes, texto legible en ambos temas y CTA correspondiente a cada estado.
-La especificación de datos/acciones prevalece frente a la apariencia del portal.
+Revisión visual final: identidad reconocible por el isotipo, violeta y tipografía;
+fotos protagonistas cuando existen; jerarquía de precio y fechas; radios y espacios
+consistentes; texto legible en ambos temas y CTA correspondiente a cada estado.
+La especificación de datos y acciones prevalece frente a la apariencia del portal.
 
 Fuentes públicas: [MCP Apps estable 2026-01-26](https://github.com/modelcontextprotocol/ext-apps/blob/main/specification/2026-01-26/apps.mdx)
 y [envío de plugins OpenAI](https://developers.openai.com/plugins/deploy/submission).

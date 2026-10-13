@@ -1,5 +1,4 @@
 const PRODUCTION_IMAGE_ORIGINS = ['https://photos.rentennials.app', 'https://api.rentennials.app'];
-const PRODUCTION_LINK_ORIGINS = ['https://mcp.rentennials.app', 'https://www.rentennials.app', 'https://rentennials.app'];
 
 const listFromEnv = (value: unknown): string[] =>
   typeof value === 'string' ? value.split(',').map((item) => item.trim()).filter(Boolean) : [];
@@ -7,11 +6,6 @@ const listFromEnv = (value: unknown): string[] =>
 export const IMAGE_ORIGINS: readonly string[] = [
   ...PRODUCTION_IMAGE_ORIGINS,
   ...listFromEnv(import.meta.env.VITE_MCP_UI_IMAGE_HOSTS),
-];
-
-export const LINK_ORIGINS: readonly string[] = [
-  ...PRODUCTION_LINK_ORIGINS,
-  ...listFromEnv(import.meta.env.VITE_MCP_UI_LINK_ORIGINS),
 ];
 
 export const ImageOriginContext = createContext<readonly string[]>(IMAGE_ORIGINS);
@@ -40,5 +34,4 @@ export function safeHttpsUrl(value: unknown, allowedOrigins: readonly string[]):
 }
 
 export const safeImageUrl = (value: unknown, origins: readonly string[] = IMAGE_ORIGINS) => safeHttpsUrl(value, origins);
-export const safeLinkUrl = (value: unknown, origins: readonly string[] = LINK_ORIGINS) => safeHttpsUrl(value, origins);
 import { createContext } from 'react';

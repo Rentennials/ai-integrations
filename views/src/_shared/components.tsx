@@ -1,8 +1,7 @@
 import { useContext, useEffect, useState, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import { useI18n } from './i18n';
-import { formatWallDate, formatWallTime, timezoneLabel, type WallTime } from './format';
 import { ImageOriginContext, safeImageUrl } from './safety';
-import { IconAlert, IconCar, IconFlagEnd, IconFlagStart, IconInfo } from './icons';
+import { IconAlert, IconCar, IconInfo } from './icons';
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: 'primary' | 'secondary' | 'link';
@@ -55,33 +54,6 @@ export function Notice({
         {title ? <span className="rt-notice__title">{title}</span> : null}
         {children}
       </div>
-    </div>
-  );
-}
-
-export function TimezoneNote({ timezone }: { timezone: unknown }) {
-  const { t } = useI18n();
-  const label = timezoneLabel(timezone);
-  return <span className="rt-small rt-dates__tz">{label ? t('localTime', { tz: label }) : t('noTimezone')}</span>;
-}
-
-export function DateBlock({ from, to, timezone, caption }: { from: WallTime | null; to: WallTime | null; timezone: unknown; caption?: string }) {
-  const { t, locale } = useI18n();
-  const cell = (label: string, icon: ReactNode, w: WallTime | null) => (
-    <div className="rt-dates__cell">
-      <span className="rt-dates__label">{icon}{label}</span>
-      <span className="rt-dates__date">{w ? formatWallDate(w, locale) : t('notAvailable')}</span>
-      {w ? <span className="rt-dates__time">{formatWallTime(w, locale)}</span> : null}
-    </div>
-  );
-  return (
-    <div className="rt-dates">
-      {caption ? <span className="rt-small" style={{ fontWeight: 500 }}>{caption}</span> : null}
-      <div className="rt-dates__grid">
-        {cell(t('from'), <IconFlagStart size={18} />, from)}
-        {cell(t('to'), <IconFlagEnd size={18} />, to)}
-      </div>
-      <TimezoneNote timezone={timezone} />
     </div>
   );
 }
@@ -151,15 +123,6 @@ export function Skeleton({ count = 1 }: { count?: number }) {
           </div>
         </div>
       ))}
-    </div>
-  );
-}
-
-export function SectionHead({ title, note }: { title: string; note?: string }) {
-  return (
-    <div className="rt-section__head">
-      <h3 className="rt-h3">{title}</h3>
-      {note ? <span className="rt-small">{note}</span> : null}
     </div>
   );
 }

@@ -7,7 +7,7 @@ privado; acá viven su presentación y el material de publicación.
 ## Estructura
 
 - `openai/`: paquete del plugin de ChatGPT y Codex.
-- `views/`: cinco pantallas MCP Apps y su especificación.
+- `views/`: dos pantallas MCP Apps (`vehicle-results` y `quote`) y su especificación.
 - `claude/` y `whatsapp/`: placeholders para próximas integraciones.
 - `.github/workflows/`: validación, distribución de views y empaquetado de OpenAI.
 
@@ -25,7 +25,7 @@ privado; acá viven su presentación y el material de publicación.
 Las views se distribuyen desde GitHub, sin npm registry. El tag de fuentes
 `mcp-views-vX.Y.Z` dispara un workflow que construye los HTML autocontenidos y
 publica `mcp-views-dist-vX.Y.Z`, con `package.json` y `dist/` en la raíz.
-`dist/manifest.json` describe las cinco URI `ui://rentennials/<view>` y su CSP.
+`dist/manifest.json` describe las dos URI `ui://rentennials/<view>` y su CSP.
 
 El consumidor fija el tag de distribución en su dependencia
 `rentennials-mcp-views`, borra su instalación anterior del paquete y `yarn.lock`,
@@ -76,36 +76,30 @@ fija el endpoint productivo y no incluye `.app.json` ni credenciales.
 
 ## Estado y pendientes
 
-Actualización local 2026-10-09: views 1.0.3 implementadas con recotización
-automática tras 500 ms al editar opciones. Sin cálculo del total en frontend;
-el último precio confirmado se conserva ante errores y la reserva queda bloqueada
-hasta aplicar una respuesta vigente. Las views 1.0.2 incorporaron navegación
-listado/detalle/cotización dentro del widget, foto del vehículo, orden visible
-y editor de fechas, horarios, extras, puntos, cupón y coberturas. El precio
-se actualiza en el servidor y la reserva se confirma en el chat después de una
-recotización del modelo. Nueva publicación y verificación real posteriores pendientes.
-Lint/tipos, 50 tests Vitest, build y 53 Playwright pasan. Capturas regeneradas
-con datos sintéticos; todavía no son evidencia de ChatGPT real.
+Views 2.0.0 con dos pantallas: `vehicle-results` y `quote`, según `views/VIEWS-SPEC.md`.
+Las views de detalle, confirmación y mis reservas se eliminaron. La distribución
+queda pendiente: el tag de fuentes `mcp-views-v2.0.0` debe crear
+`mcp-views-dist-v2.0.0`, y no se creó ningún tag. Validación local con Node 22:
+lint, typecheck, 35 tests Vitest, build de 2 HTML con `manifest.json`, 36 tests
+Playwright y el bloque de validación del workflow de release contra `views/dist`
+sin `RELEASE_TAG`. Las capturas son de harness sintético, con datos e imágenes de
+prueba y fuentes de fallback: no son evidencia de ChatGPT, Codex ni Claude reales.
 
-Setup, cinco pantallas, fixtures/tests/harness y workflows implementados.
-Lint, typecheck, 47 tests Vitest, build y 39 tests Playwright pasan con Node 22.
-El árbol de distribución se validó en dry-run; el tag público aún está pendiente.
+Soporte y los cuatro PNG de icono/logo están completos. Los PNG cuadrados de 512 px
+se generaron desde el isotipo y logos SVG públicos del portal, con permiso del
+usuario, manteniendo la geometría y variantes clara/oscura. Las cuatro capturas de
+`openai/assets/` son de 706 px y se copian desde `views/test-results/openai/` tras
+`yarn test:e2e`; antes del envío deben revisarse con marca y material final.
 
-Soporte y los cuatro PNG de icono/logo están completos. Los PNG cuadrados
-de 512 px se generaron desde el isotipo y logos SVG públicos del portal, con
-permiso del usuario, manteniendo la geometría y variantes clara/oscura.
-Hay cuatro capturas de harness en esa carpeta, con datos/imágenes sintéticos
-y fuentes fallback. Se deben revisar con marca y material final antes del envío.
-Falla si falta soporte o cualquier asset; no produce un ZIP incompleto.
-Las capturas son de 706 px de ancho y los iconos cuadrados de al menos 48 px.
+Falla si falta soporte o cualquier asset; no produce un ZIP incompleto. Los iconos
+cuadrados miden al menos 48 px.
 
-El validador del plugin pasa y el ZIP se generó/revisó; esto verifica formato
-y archivos, no aprobación del envío ni comportamiento de producción.
+El validador del plugin pasa en esta corrida; el ZIP no se regeneró desde las
+capturas nuevas. Validar formato y archivos no equivale a aprobación del envío ni
+a comportamiento de producción.
 La cuenta demo sin MFA, archivos de tipografía, video y evidencia en clientes
-reales también siguen pendientes. Las capturas de Claude quedan en
-`views/test-results/claude/` y las de OpenAI se generan en
-`views/test-results/openai/` antes de incorporarlas al paquete.
+reales siguen pendientes. Las capturas de Claude quedan en `views/test-results/claude/`.
 
-No se eligió una licencia de distribución. El canal especializado de reporte
-de vulnerabilidades está pendiente de definición; soporte general confirmado
-en la página de contacto.
+No se eligió una licencia de distribución. El canal especializado de reporte de
+vulnerabilidades está pendiente de definición; soporte general confirmado en la
+página de contacto.

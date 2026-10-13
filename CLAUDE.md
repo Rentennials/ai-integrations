@@ -8,33 +8,29 @@
 
 ## Snapshot
 
-### Cotización integrada · implementación local 2026-10-09
+### Views 2.0.0 · implementación local 2026-10-13
 
-Views 1.0.3 implementadas: editor con recotización automática tras 500 ms,
-descarte de respuestas tardías, reintento explícito y precio aplicado separado.
-No calcula totales ni modifica la regla de pricing upstream. Distribución nueva
-y aceptación real pendientes. Resultados abre detalle/quote por lectura
-del bridge en el mismo widget. Quote muestra identidad/foto y permite editar
-fechas, horarios, extras/cantidades, puntos, cupón y covers; separa borrador de
-cotización aplicada. Reserva bloqueada mientras hay cambios pendientes y
-handoff al modelo para recotizar con todos los argumentos antes de confirmar.
-Orden visible: ranking de plataforma por defecto, tarifa diaria asc/desc,
-rating o reservas. Cambiar orden consulta el servidor conservando filtros.
-La allowlist incorpora también metadata de lecturas locales; requiere que el
-servidor y el host permitan el origen. Los 404 no se arreglan desde la view.
-Los changes primarios viven en mcp-api/specs/changes/mcp-quote-workspace/ y
-mcp-api/specs/changes/mcp-auto-requote/.
-Validado: lint/tipos, 50 Vitest, build y 53 Playwright. Capturas sintéticas de
-harness regeneradas; no equivalen a ejecución real en ChatGPT. Sin nuevas
-dependencias, commits, instalación ni publicación de tags.
+Dos views: `vehicle-results` (abre con `search_vehicles`; carrusel con orden,
+“Ver más autos” y “Elegir”, que devuelve la elección al chat) y `quote` (abre con
+`show_rental_summary`; edición de fechas, puntos, coberturas, extras y cupón con
+recotización por `get_vehicle_quote` tras 500 ms; “Solicitar reserva” vuelve al
+chat para confirmación). Se eliminaron las views de detalle, confirmación y mis
+reservas. Ninguna view crea reservas ni cobros.
+Distribución pendiente: el tag de fuentes `mcp-views-v2.0.0` debe crear
+`mcp-views-dist-v2.0.0`; no se creó ningún tag.
+Validado localmente con Node 22: lint, typecheck, 35 tests Vitest, build de 2 HTML
+y manifest, 36 tests Playwright y el bloque de validación del workflow de release
+contra `views/dist` sin `RELEASE_TAG`. Las capturas de OpenAI en `openai/assets/`
+se copiaron desde el harness sintético a 706 px; las de Claude quedan a 1000 px.
+Nada de eso equivale a ejecución real en ChatGPT ni Codex. Sin nuevas dependencias,
+instalación ni publicación de tags.
 
 Repo público de presentación y publicación de integraciones. Setup workspaces,
 configs, manifiestos/validador OpenAI y tres workflows implementados. Stack:
 Node 22 >=22.12, Yarn 1, TypeScript strict y React 19. Dependencias instaladas
-por el usuario y yarn.lock generado. Las cinco pantallas, bridge/harness,
-fixtures y tests entregados por el agente de diseño están integrados y ajustados
-a los contratos reales. Las fuentes embebidas y la revisión final de capturas
-con marca siguen pendientes.
+por el usuario y yarn.lock generado. Las dos views, bridge/harness, fixtures y
+tests están integrados y ajustados a los contratos reales. Las fuentes embebidas
+y la revisión final de capturas con marca siguen pendientes.
 
 `views/` contiene la especificación de MCP Apps. `claude/` y `whatsapp/` son
 placeholders. `openai/` contiene el plugin portable de ChatGPT/Codex, listing,
@@ -72,21 +68,23 @@ playwright/test del paquete ya declarado, sin @playwright/test adicional.
 Acá están permitidos build/harness/tests frontend; no trasladar esa autorización
 al servidor backend. CI exige yarn.lock generado por instalación del usuario.
 
-Validaciones realizadas con Node 22: lint, typecheck, 47 tests Vitest, build
-de cinco HTML/manifest y 39 tests Playwright. Capturas de harness a 706/1000 px;
+Validaciones realizadas con Node 22: lint, typecheck, 35 tests Vitest, build
+de 2 HTML/manifest y 36 tests Playwright. El bloque de validación del workflow de
+release pasa contra views/dist sin RELEASE_TAG. Capturas de harness a 706/1000 px;
 las imágenes de tests son sintéticas y las fuentes usan fallback. No representan
 evidencia de ejecución en ChatGPT/Codex. El árbol de distribución se validó
 en dry-run sin publicar tags.
 
 Soporte confirmado: https://www.rentennials.app/contact. Los cuatro PNG
 oficiales de icono/logo (512 px) se generaron desde SVGs públicos con permiso.
-openai:validate y openai:package pasan; ZIP revisado con 12 archivos de allowlist.
+openai:validate pasa en esta corrida; openai:package no se volvió a ejecutar, así
+que el ZIP vigente es anterior a las capturas nuevas.
 
 Pendientes: primer tag de distribución, fuentes, cuenta demo,
 video y evidencia en clientes reales. Configuración
 por variables del proceso: MCP_PUBLIC_URL, OPENAI_SUPPORT_URL, MCP_UI_IMAGE_HOSTS;
-los scripts no cargan .env automáticamente. Vite deriva de esas variables las
-allowlists de imágenes/enlaces de la view, sin otra configuración de ambiente.
+los scripts no cargan .env automáticamente. Vite deriva de MCP_UI_IMAGE_HOSTS la
+allowlist de imágenes de la view, sin otra configuración de ambiente.
 Packaging falla si faltan soporte o assets. Los actuales están completos;
 capturas/material de revisión y pruebas de clientes reales siguen pendientes.
 No se eligió una licencia.

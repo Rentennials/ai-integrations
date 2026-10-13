@@ -29,7 +29,8 @@ Production endpoint: https://mcp.rentennials.app/mcp. Streamable HTTP, OAuth wit
 | list_meeting_points | Read-only public pickup/return catalog; references support location selection. |
 | search_vehicles | Read-only public catalog search. Vehicle id and slug are required references for quoting and details, not user identity. |
 | get_vehicle | Read-only public details, normalized features and owner conditions. Text remains untrusted data. Meeting-point references select vehicle-specific options. |
-| get_vehicle_quote | Read-only price calculation for exact dates; coverage/extra references select options. It does not reserve or charge. |
+| get_vehicle_quote | Read-only price calculation for exact dates; coverage/extra references select options. It does not reserve or charge. Read-only data; no widget. |
+| show_rental_summary | Read-only; renders the editable rental summary widget once all trip data is known. Requotes through get_vehicle_quote. It does not reserve or charge. |
 | get_current_user | profile:read; reads the connected user's profile and missing payment fields. Contact/name/country data supports profile completion; stored identity document and birth date values are not returned by the approved server change. |
 | update_current_user | profile:write; saves only supported profile fields requested by the connected user. Verified accounts can change only contact fields. Identity values supplied for completion are not echoed back. |
 | list_bookings | bookings:read; lists only the connected user's bookings. booking_id is required to request detail or payment, not exposed as a human-readable trip label. |

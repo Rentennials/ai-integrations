@@ -273,18 +273,27 @@ test('cancel and teardown states', async ({ page }) => {
   await expect(app.getByText('Sin conexión con el chat')).toBeVisible();
 });
 
-const OPENAI = [['vehicle-results', 'ars'], ['quote', 'fast']] as const;
+async function captureSequence(page: Page, width: number, dir: string) {
+  await open(page, 'vehicle-results', 'ars', width, 'light');
+  await page.getByTestId('sandbox').screenshot({ path: `${dir}/screenshot-1.png`, animations: 'disabled' });
+
+  const quote = await open(page, 'quote', 'fast', width, 'light');
+  await page.getByTestId('sandbox').screenshot({ path: `${dir}/screenshot-2.png`, animations: 'disabled' });
+  await quote.app.getByRole('tab', { name: 'Cobertura', exact: true }).click();
+  await expect(quote.app.getByRole('tab', { name: 'Cobertura', exact: true })).toHaveAttribute('aria-selected', 'true');
+  await page.getByTestId('sandbox').screenshot({ path: `${dir}/screenshot-3.png`, animations: 'disabled' });
+
+  const results = await open(page, 'vehicle-results', 'ars', width, 'light');
+  await results.app.getByRole('button', { name: 'Precio menor a mayor', exact: true }).click();
+  await expect(results.app.getByRole('button', { name: 'Precio menor a mayor', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  await expect(results.app.locator('.rt-carousel__lane')).not.toHaveAttribute('aria-busy', 'true');
+  await page.getByTestId('sandbox').screenshot({ path: `${dir}/screenshot-4.png`, animations: 'disabled' });
+}
 
 test('screenshots · OpenAI 706 px', async ({ page }) => {
-  for (const [i, [view, fixture]] of OPENAI.entries()) {
-    await open(page, view, fixture, 706, 'light');
-    await page.getByTestId('sandbox').screenshot({ path: `test-results/openai/screenshot-${i + 1}.png`, animations: 'disabled' });
-  }
+  await captureSequence(page, 706, 'test-results/openai');
 });
 
 test('screenshots · Claude 1000 px', async ({ page }) => {
-  for (const [view, fixture] of Object.entries(VIEWS)) {
-    await open(page, view, fixture, 1000, 'light');
-    await page.getByTestId('sandbox').screenshot({ path: `test-results/claude/${view}.png`, animations: 'disabled' });
-  }
+  await captureSequence(page, 1000, 'test-results/claude');
 });

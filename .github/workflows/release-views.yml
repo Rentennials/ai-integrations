@@ -26,9 +26,9 @@ jobs:
           const pkg = JSON.parse(readFileSync('views/package.json', 'utf8'));
           if (!/^\d+\.\d+\.\d+$/.test(pkg.version)) throw new Error('Invalid views version');
           if (process.env.RELEASE_TAG && process.env.RELEASE_TAG !== `mcp-views-v${pkg.version}`) throw new Error('Tag and package version differ');
-          const names = ['vehicle-results', 'vehicle-detail', 'quote', 'booking-confirmation', 'my-bookings'];
+          const names = ['vehicle-results', 'quote'];
           const manifest = JSON.parse(readFileSync('views/dist/manifest.json', 'utf8'));
-          if (!Array.isArray(manifest) || manifest.length !== names.length) throw new Error('Expected five views');
+          if (!Array.isArray(manifest) || manifest.length !== names.length) throw new Error('Expected two views');
           const seen = new Set();
           for (const view of manifest) {
             if (!names.includes(view.name) || seen.has(view.name) || view.uri !== `ui://rentennials/${view.name}` || view.file !== `${view.name}.html`) throw new Error('Invalid manifest entry');
