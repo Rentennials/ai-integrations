@@ -6,7 +6,7 @@ import react from '@vitejs/plugin-react';
 import { viteSingleFile } from 'vite-plugin-singlefile';
 
 const root = dirname(fileURLToPath(import.meta.url));
-const views = ['vehicle-results', 'vehicle-detail', 'quote', 'booking-confirmation', 'my-bookings'];
+const views = ['vehicle-results', 'quote'];
 
 export default defineConfig(({ command, mode }) => {
   if (command === 'build' && !views.includes(mode)) {

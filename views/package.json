@@ -1,6 +1,6 @@
 {
   "name": "rentennials-mcp-views",
-  "version": "1.0.3",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
   "files": ["dist"],
@@ -9,7 +9,7 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "dev": "vite --host 127.0.0.1",
-    "build": "vite build --mode vehicle-results && vite build --mode vehicle-detail && vite build --mode quote && vite build --mode booking-confirmation && vite build --mode my-bookings"
+    "build": "vite build --mode vehicle-results && vite build --mode quote"
   },
   "dependencies": {
     "@modelcontextprotocol/ext-apps": "^2.0.0",

@@ -48,10 +48,6 @@ export function parseInstant(value: unknown): number | null {
   return Number.isFinite(ms) ? ms : null;
 }
 
-export function formatInstant(ms: number, locale: string): string {
-  return new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(ms));
-}
-
 export function computeDeadline(expiresAt: unknown, ttlSeconds: unknown, receivedAt: number): number | null {
   const absolute = parseInstant(expiresAt);
   if (absolute != null) return absolute;

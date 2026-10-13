@@ -1,10 +1,8 @@
-import { useContext, useEffect, useState, type ButtonHTMLAttributes, type KeyboardEvent, type ReactNode } from 'react';
+import { useContext, useEffect, useState, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import { useI18n } from './i18n';
-import { formatCountdown, formatWallDate, formatWallTime, timezoneLabel, type WallTime } from './format';
+import { formatWallDate, formatWallTime, timezoneLabel, type WallTime } from './format';
 import { ImageOriginContext, safeImageUrl } from './safety';
-import {
-  IconAlert, IconCar, IconChevronLeft, IconChevronRight, IconFlagEnd, IconFlagStart, IconInfo, IconTimer,
-} from './icons';
+import { IconAlert, IconCar, IconFlagEnd, IconFlagStart, IconInfo } from './icons';
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: 'primary' | 'secondary' | 'link';
@@ -127,89 +125,6 @@ export function SafeImage({ src, alt }: { src: unknown; alt: string }) {
     );
   }
   return <img src={safe} alt={alt} loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={() => setFailed(true)} />;
-}
-
-export function Gallery({ urls, name }: { urls: string[]; name: string }) {
-  const { t } = useI18n();
-  const [index, setIndex] = useState(0);
-  const n = urls.length;
-  const go = (i: number) => setIndex(((i % n) + n) % n);
-  const onKey = (e: KeyboardEvent) => {
-    if (e.key === 'ArrowLeft') { e.preventDefault(); go(index - 1); }
-    if (e.key === 'ArrowRight') { e.preventDefault(); go(index + 1); }
-  };
-  if (n === 0) {
-    return (
-      <div className="rt-gallery">
-        <div className="rt-media rt-gallery__stage"><SafeImage src={null} alt="" /></div>
-      </div>
-    );
-  }
-  return (
-    <div className="rt-gallery" role="region" aria-roledescription="carousel" aria-label={t('detail.photos')} onKeyDown={onKey}>
-      <div className="rt-media rt-gallery__stage">
-        <SafeImage key={index} src={urls[index]} alt={t('detail.photo', { name, i: index + 1, n })} />
-        {n > 1 ? (
-          <>
-            <button type="button" className="rt-gallery__nav rt-gallery__nav--prev" aria-label={t('detail.prev')} onClick={() => go(index - 1)}><IconChevronLeft /></button>
-            <button type="button" className="rt-gallery__nav rt-gallery__nav--next" aria-label={t('detail.next')} onClick={() => go(index + 1)}><IconChevronRight /></button>
-          </>
-        ) : null}
-        <span className="rt-gallery__count" aria-live="polite">{t('detail.counter', { i: index + 1, n })}</span>
-      </div>
-      {n > 1 ? (
-        <div className="rt-gallery__thumbs">
-          {urls.map((url, i) => (
-            <button key={url + i} type="button" className="rt-gallery__thumb rt-media" aria-label={t('detail.thumb', { i: i + 1 })} aria-current={i === index} onClick={() => go(i)}>
-              <SafeImage src={url} alt="" />
-            </button>
-          ))}
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-export function useNow(active: boolean) {
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    if (!active) return;
-    const id = window.setInterval(() => setNow(Date.now()), 1000);
-    return () => window.clearInterval(id);
-  }, [active]);
-  return now;
-}
-
-export function Countdown({ remainingMs }: { remainingMs: number }) {
-  const { t } = useI18n();
-  const minutes = Math.ceil(remainingMs / 60000);
-  return (
-    <div className="rt-between">
-      <span className="rt-row" style={{ font: '500 13px/18px var(--rt-font-body)', color: 'var(--rt-text-2)' }}>
-        <IconTimer style={{ color: 'var(--rt-brand)' }} />
-        {t('confirm.expiresIn')}
-      </span>
-      <span className="rt-countdown" role="timer" aria-live="off" aria-label={t('confirm.expiresAria', { min: minutes })}>
-        {formatCountdown(remainingMs)}
-      </span>
-    </div>
-  );
-}
-
-export function ExpandableText({ text, threshold = 180 }: { text: string; threshold?: number }) {
-  const { t } = useI18n();
-  const [open, setOpen] = useState(false);
-  const long = text.length > threshold;
-  return (
-    <>
-      <p className={`rt-body${long && !open ? ' rt-body--clamp' : ''}`}>{text}</p>
-      {long ? (
-        <Button variant="link" aria-expanded={open} onClick={() => setOpen(!open)}>
-          {open ? t('showLess') : t('showMore')}
-        </Button>
-      ) : null}
-    </>
-  );
 }
 
 export function StateMessage({ icon, title, text, role = 'status' }: { icon: ReactNode; title: string; text: string; role?: 'status' | 'alert' }) {

@@ -55,29 +55,6 @@ export const SearchVehiclesResult = z.object({
     .nullish(),
 });
 
-export const VehicleDetail = z.object({
-  id: z.string(),
-  slug: str,
-  name: z.string(),
-  year: str,
-  image_urls: z.array(z.string()).nullish(),
-  description: str,
-  disclaimer: str,
-  features: z.array(z.object({ key: z.string(), label: str, value: z.string() })).nullish(),
-  meeting_points: z.array(MeetingPoint).nullish(),
-  passengers: str,
-  transmission: str,
-  fuel: str,
-  doors: str,
-  kms_per_day: str,
-  timezone: str,
-  currency: str,
-  guarantee_deposit: num,
-  guarantee_deposit_currency: str,
-  deductible: num,
-  content_warnings: z.array(z.string()).nullish(),
-});
-
 const Coverage = z.object({
   id: str,
   type: str,
@@ -115,92 +92,9 @@ export const Quote = z.object({
     .nullish(),
 });
 
-export const CreateBookingResult = z.object({
-  booking_id: z.string(),
-  booking_number: num,
-  vehicle_name: str,
-  mode: z.enum(['request', 'instant']),
-  status: str,
-  from: str,
-  to: str,
-  timezone: str,
-  total: num,
-  currency: str,
-  total_matches_quote: bool,
-  pay_now: num,
-  payment_url: str,
-  payment_expires_at: str,
-  payment_expires_in_seconds: num,
-  payment_plan: z.enum(['full', 'fast']),
-  remaining_amount: num,
-  remaining_charge_date: str,
-  next_step: str,
-  manage_url: str,
-});
-
-export const PayBookingResult = z.object({
-  booking_id: z.string(),
-  booking_number: num,
-  vehicle_name: str,
-  amount: num,
-  currency: str,
-  payment_url: str,
-  payment_url_expires_at: str,
-  payment_url_expires_in_seconds: num,
-  next_step: str,
-  manage_url: str,
-});
-
-export const BookingSummary = z.object({
-  booking_id: z.string(),
-  booking_number: num,
-  status: str,
-  vehicle_name: str,
-  from: str,
-  to: str,
-  timezone: str,
-  total: num,
-  currency: str,
-  amount_to_pay_now: num,
-  needs_payment: bool,
-  paid: bool,
-  is_extension: bool,
-});
-
-export const ListBookingsResult = z.object({
-  bookings: z.array(BookingSummary),
-  page: num,
-  total_count: num,
-  has_more: bool,
-});
-
-export const BookingDetail = BookingSummary.extend({
-  amount_to_pay_now_currency: str,
-  subtotal: num,
-  discount_total: num,
-  extra_services_total: num,
-  date_paid: str,
-  cancelled: bool,
-  pickup_city: str,
-  included_kms_per_day: str,
-  extra_services: z.array(z.object({ name: str, quantity: num, price: num })).nullish(),
-  coverages: z.array(z.object({ name: str, price: num })).nullish(),
-  pickup_meeting_point: z.object({ name: str, price: num }).nullish(),
-  return_meeting_point: z.object({ name: str, price: num }).nullish(),
-  security_deposit: z.object({ amount: num, currency: str, paid: bool }).nullish(),
-  next_instalment: z.object({ amount: num, currency: str, debit_date: str }).nullish(),
-  contract_url: str,
-});
-
 export type SearchVehiclesResult = z.infer<typeof SearchVehiclesResult>;
 export type VehicleSummary = z.infer<typeof VehicleSummary>;
-export type VehicleDetail = z.infer<typeof VehicleDetail>;
 export type Quote = z.infer<typeof Quote>;
-export type CreateBookingResult = z.infer<typeof CreateBookingResult>;
-export type PayBookingResult = z.infer<typeof PayBookingResult>;
-export type ListBookingsResult = z.infer<typeof ListBookingsResult>;
-export type BookingSummary = z.infer<typeof BookingSummary>;
-export type BookingDetail = z.infer<typeof BookingDetail>;
 
 export const QuoteArguments = z.object({
   vehicle_id: z.string().regex(/^[a-f\d]{24}$/i),

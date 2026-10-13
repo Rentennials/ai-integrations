@@ -17,8 +17,6 @@ const labels: Record<string, [string, string]> = {
   allow_out_of_state: ['Circulación fuera de la provincia/estado', 'Travel outside the state/province'],
 };
 
-export const SUMMARY_FEATURE_KEYS = new Set(['year', 'transmition', 'car_doors', 'fuel_car', 'kms_per_day', 'passengers']);
-
 export const featureLabel = (key: string, fallback: string | null | undefined, lang: Lang): string =>
   labels[key]?.[lang === 'es' ? 0 : 1] ?? fallback ?? key;
 

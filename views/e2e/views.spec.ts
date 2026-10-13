@@ -2,10 +2,7 @@ import { expect, test, type Page } from 'playwright/test';
 
 const VIEWS: Record<string, string> = {
   'vehicle-results': 'ars',
-  'vehicle-detail': 'dates',
   quote: 'fast',
-  'booking-confirmation': 'instant',
-  'my-bookings': 'list',
 };
 const WIDTHS = [360, 706, 1000];
 const THEMES = ['light', 'dark'] as const;
@@ -51,18 +48,6 @@ for (const [view, fixture] of Object.entries(VIEWS)) {
   }
 }
 
-test('vehicle-results · quote opens locally and detail calls get_vehicle', async ({ page }) => {
-  const { app } = await open(page, 'vehicle-results', 'ars', 706, 'light');
-  await app.getByRole('button', { name: 'Cotizar' }).first().click();
-  await expect(page.locator('[data-kind="sendMessage"]')).toHaveCount(0);
-  await expect(app.getByRole('button', { name: 'Solicitar reserva' })).toBeVisible();
-  await expect(app.getByRole('heading', { name: 'Renault Kwid 2018', exact: true })).toBeVisible();
-  await app.getByRole('button', { name: 'Volver al listado' }).click();
-  await app.getByRole('button', { name: 'Ver detalle' }).first().click();
-  expect((await page.locator('[data-kind="callServerTool"]').allTextContents()).join(' ')).toContain('"name":"get_vehicle"');
-  await expect(app.getByRole('heading', { name: 'Características principales' })).toBeVisible();
-});
-
 test('quote · request booking goes through chat only', async ({ page }) => {
   const { app } = await open(page, 'quote', 'fast', 706, 'light');
   await app.getByRole('button', { name: 'Solicitar reserva' }).click();
@@ -87,31 +72,6 @@ test('images follow runtime server policy with matching CSP', async ({ page }) =
   await expect(image).toHaveAttribute('src', 'https://images.example.com/preview.webp');
   await expect.poll(() => image.evaluate((element) => (element as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
   expect(errors).toEqual([]);
-});
-
-test('local read updates image allowlist without a new chat panel', async ({ page }) => {
-  const { app, errors } = await open(page, 'vehicle-results', 'resultOrigins', 706, 'light');
-  await app.getByRole('button', { name: 'Ver detalle', exact: true }).click();
-  const image = app.locator('.rt-gallery__stage img');
-  await expect(image).toHaveAttribute('src', 'https://images.example.com/detail.webp');
-  await expect.poll(() => image.evaluate((element) => (element as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
-  await expect(page.locator('[data-kind="sendMessage"]')).toHaveCount(0);
-  expect(errors).toEqual([]);
-});
-
-test('detail uses localized labels and no doubled units', async ({ page }) => {
-  const { app } = await open(page, 'vehicle-detail', 'dates', 706, 'light');
-  await expect(app.getByText('5 puertas', { exact: true })).toBeVisible();
-  await expect(app.getByText('250 km/día', { exact: true })).toBeVisible();
-  await expect(app.getByText('Air conditioning', { exact: true })).toHaveCount(0);
-});
-
-test('detail loading stays compact', async ({ page }) => {
-  await page.goto('/?view=vehicle-detail&fixture=dates&hold=1');
-  await expect(page.getByTestId('sandbox')).toHaveAttribute('data-ready', 'true');
-  const app = page.frameLocator('[data-testid="sandbox"]').frameLocator('iframe');
-  await expect(app.getByText('Cargando', { exact: true })).toBeVisible();
-  await expect(app.locator('.rt-media.rt-skel')).toHaveCount(0);
 });
 
 test('coverage selection requotes and preserves other types before chat confirmation', async ({ page }) => {
@@ -211,27 +171,6 @@ test('search order requeries and keeps airport and no-card filters', async ({ pa
   await expect(page.locator('[data-kind="sendMessage"]')).toHaveCount(0);
 });
 
-test('airport search maps global locations to vehicle points when quoting locally', async ({ page }) => {
-  const { app } = await open(page, 'vehicle-results', 'airport', 706, 'light');
-  await app.getByRole('button', { name: 'Cotizar', exact: true }).first().click();
-  await expect(app.getByLabel('Retiro', { exact: true })).toHaveValue('mp_fx_2');
-  await expect(app.getByLabel('Devolución', { exact: true })).toHaveValue('mp_fx_3');
-  expect((await page.locator('[data-kind="callServerTool"]').allTextContents()).join(' ')).toContain('"pickup_meeting_point_id":"mp_fx_2"');
-  await expect(page.locator('[data-kind="sendMessage"]')).toHaveCount(0);
-});
-
-test('local quote preserves applied changes after returning to results', async ({ page }) => {
-  const { app } = await open(page, 'vehicle-results', 'ars', 706, 'light');
-  await app.getByRole('button', { name: 'Cotizar', exact: true }).first().click();
-  await app.getByLabel('Silla de bebé (0 a 3 años)', { exact: true }).selectOption('1');
-  await expect(app.locator('.rt-total__amount')).toContainText('184.650');
-  await app.getByRole('button', { name: 'Volver al listado' }).click();
-  await expect(app.locator('article.rt-vcard')).toHaveCount(5);
-  await app.getByRole('button', { name: 'Cotizar', exact: true }).first().click();
-  await expect(app.getByLabel('Silla de bebé (0 a 3 años)', { exact: true })).toHaveValue('1');
-  await expect(app.locator('.rt-total__amount')).toContainText('184.650');
-});
-
 test('coverage can return to the included default', async ({ page }) => {
   const { app } = await open(page, 'quote', 'fast', 706, 'light');
   await app.getByRole('radio', { name: 'Cobertura Premium', exact: true }).click();
@@ -239,36 +178,6 @@ test('coverage can return to the included default', async ({ page }) => {
   await app.getByRole('radio', { name: 'Cobertura básica', exact: true }).click();
   await expect(app.locator('.rt-total__amount')).toContainText('174.650');
   await expect(app.getByRole('radio', { name: 'Cobertura básica', exact: true })).toBeChecked();
-});
-
-test('booking-confirmation · pay opens link only after click', async ({ page }) => {
-  const { app } = await open(page, 'booking-confirmation', 'instant', 706, 'light');
-  await expect(page.locator('[data-kind="openLink"]')).toHaveCount(0);
-  await app.getByRole('button', { name: /Pagar en Rentennials/ }).click();
-  await expect(page.locator('[data-kind="openLink"]')).toContainText('https://mcp.rentennials.app/pay/fixture-1');
-});
-
-test('booking-confirmation · expired link is disabled', async ({ page }) => {
-  const { app } = await open(page, 'booking-confirmation', 'expired', 706, 'light');
-  await expect(app.getByRole('button', { name: /Pagar en Rentennials/ })).toBeDisabled();
-});
-
-test('my-bookings · pay asks in chat and never calls pay_booking', async ({ page }) => {
-  const { app } = await open(page, 'my-bookings', 'list', 706, 'light');
-  await expect(app.getByRole('button', { name: 'Pagar', exact: true })).toHaveCount(1);
-  await app.getByRole('button', { name: 'Pagar', exact: true }).click();
-  await expect(page.locator('[data-kind="sendMessage"]')).toContainText("I'd like to pay my booking No. 10001");
-  await app.getByRole('button', { name: 'Ver detalle' }).first().click();
-  await expect(page.locator('[data-kind="callServerTool"]')).toContainText('"booking_id":"000000000000000000000011"');
-  await expect(page.locator('[data-kind="callServerTool"]')).not.toContainText('pay_booking');
-});
-
-test('failed action keeps previous result and announces it', async ({ page }) => {
-  const { app } = await open(page, 'vehicle-results', 'ars', 706, 'light');
-  await page.getByTestId('fail-actions').check();
-  await app.getByRole('button', { name: 'Cotizar' }).first().click();
-  await expect(app.getByRole('alert')).toContainText('No pudimos completar la acción');
-  await expect(app.getByText('Renault Kwid 2018')).toBeVisible();
 });
 
 test('cancel and teardown states', async ({ page }) => {
@@ -282,7 +191,7 @@ test('cancel and teardown states', async ({ page }) => {
   await expect(app.getByText('Sin conexión con el chat')).toBeVisible();
 });
 
-const OPENAI = [['vehicle-results', 'ars'], ['quote', 'fast'], ['booking-confirmation', 'instant'], ['my-bookings', 'list']] as const;
+const OPENAI = [['vehicle-results', 'ars'], ['quote', 'fast']] as const;
 
 test('screenshots · OpenAI 706 px', async ({ page }) => {
   for (const [i, [view, fixture]] of OPENAI.entries()) {

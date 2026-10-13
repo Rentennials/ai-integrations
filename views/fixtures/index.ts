@@ -62,14 +62,6 @@ export const vehicleDetail = {
   guarantee_deposit: 620000, guarantee_deposit_currency: 'ARS', deductible: 155000, content_warnings: [],
 };
 
-export const vehicleDetailWarnings = {
-  ...vehicleDetail, id: '000000000000000000000004', slug: 'vehicle-fx-4', name: 'Toyota Etios', year: null, image_urls: [], description: 'Auto cómodo para la ciudad.',
-  disclaimer: 'Devolver con el tanque lleno. El vehículo no puede salir del país sin autorización escrita del propietario y',
-  features: [{ key: 'bt', label: 'Bluetooth', value: 'true' }], passengers: null, fuel: null, kms_per_day: null,
-  guarantee_deposit: null, guarantee_deposit_currency: null, deductible: 0,
-  content_warnings: ['images_invalid', 'disclaimer_truncated', 'features_invalid', 'unknown_warning'],
-};
-
 export const quote = {
   vehicle: { id: vehicleDetail.id, slug: vehicleDetail.slug, name: vehicleDetail.name, year: vehicleDetail.year, image_url: vehicleDetail.image_urls[0], country: 'Argentina', timezone: MZA },
   availability: 'available',
@@ -103,51 +95,6 @@ export const quoteNoFast = {
   pay_now: 177990, pay_on_pickup: 0, automatic_approval: true, payment_fast: null,
 };
 
-const bookingBase = {
-   booking_id: '000000000000000000000011', booking_number: 10001, vehicle_name: 'Renault Kwid 2018', from: '2026-10-02T18:00', to: '2026-10-04T18:00',
-  timezone: MZA, total: 174650, currency: 'ARS', total_matches_quote: true, manage_url: 'https://www.rentennials.app/mis-viajes',
-};
-
-export const bookingRequest = {
-  ...bookingBase, mode: 'request', status: 'PENDING', pay_now: 90510, payment_url: null, payment_expires_at: null,
-  payment_expires_in_seconds: null, payment_plan: 'full', remaining_amount: null, remaining_charge_date: null,
-  next_step: 'El anfitrión revisará tu solicitud. Cuando la apruebe, te avisaremos para completar el pago.',
-};
-
-export const bookingInstant = {
-  ...bookingRequest, mode: 'instant', status: 'PROVISIONAL', payment_url: 'https://mcp.rentennials.app/pay/fixture-1',
-  payment_expires_in_seconds: 900, next_step: 'Completá el pago en Rentennials para confirmar la reserva.',
-};
-
-export const bookingFast = { ...bookingInstant, pay_now: 52395, remaining_amount: 122255, remaining_charge_date: '2026-10-01T18:00', payment_plan: 'fast', payment_expires_in_seconds: 600 };
-export const bookingExpired = { ...bookingInstant, payment_expires_at: '2026-01-01T00:00:00Z', payment_expires_in_seconds: 900 };
-export const bookingTotalChanged = { ...bookingRequest, total: 178900, total_matches_quote: false, pay_now: 92700, remaining_amount: 86200 };
-
-export const payBooking = {
-   booking_id: '000000000000000000000012', booking_number: 10002, vehicle_name: 'Peugeot 208 Allure 2023', amount: 90510, currency: 'ARS',
-  payment_url: 'https://mcp.rentennials.app/pay/fixture-2', payment_url_expires_at: '2099-01-01T00:00:00Z', payment_url_expires_in_seconds: 1200,
-  next_step: 'Tu reserva fue aprobada. Completá el pago para confirmarla.', manage_url: 'https://www.rentennials.app/mis-viajes',
-};
-
-export const bookingList = {
-  page: 1, total_count: null, has_more: false,
-  bookings: [
-    { booking_id: '000000000000000000000011', booking_number: 10001, status: 'APPROVED', vehicle_name: 'Renault Kwid 2018', from: '2026-10-02T18:00', to: '2026-10-04T18:00', timezone: MZA, total: 174650, currency: 'ARS', amount_to_pay_now: 90510, needs_payment: true, paid: false, is_extension: false },
-    { booking_id: '000000000000000000000012', booking_number: 10002, status: 'PAID', vehicle_name: 'Peugeot 208 Allure 2023', from: '2026-11-14T10:00', to: '2026-11-18T10:00', timezone: MZA, total: 572800, currency: 'ARS', amount_to_pay_now: 0, needs_payment: false, paid: true, is_extension: false },
-    { booking_id: '000000000000000000000013', booking_number: 10003, status: 'APPROVED', vehicle_name: 'Peugeot 208 Allure 2023', from: '2026-11-18T10:00', to: '2026-11-19T10:00', timezone: MZA, total: 143200, currency: 'ARS', amount_to_pay_now: 143200, needs_payment: true, paid: false, is_extension: true },
-    { booking_id: '000000000000000000000014', booking_number: 10004, status: null, vehicle_name: 'Ford Escape 2022', from: '2026-12-20T09:30', to: '2026-12-27T09:30', timezone: 'America/New_York', total: 420, currency: 'USD', amount_to_pay_now: null, needs_payment: false, paid: false, is_extension: false },
-  ],
-};
-
-export const bookingDetail = {
-  ...bookingList.bookings[0], amount_to_pay_now_currency: 'ARS', subtotal: 162990, discount_total: 3340, extra_services_total: 15000,
-  date_paid: null, cancelled: false, pickup_city: 'Mendoza', included_kms_per_day: '250',
-  extra_services: [{ name: 'Peajes ilimitados', quantity: 1, price: 15000 }], coverages: [{ name: 'Rentennials Cover', price: 2990 }],
-  pickup_meeting_point: { name: 'Aeropuerto El Plumerillo', price: 12000 }, return_meeting_point: { name: 'A coordinar con el anfitrión', price: 0 },
-  security_deposit: { amount: 620000, currency: 'ARS', paid: false }, next_instalment: { amount: 84140, currency: 'ARS', debit_date: '2026-10-01T18:00' },
-  contract_url: 'https://www.rentennials.app/contratos/fx',
-};
-
 const quoteInput = { vehicle_id: '000000000000000000000001', from_date: '2026-10-02', from_date_time: '18:00', to_date: '2026-10-04', to_date_time: '18:00' };
 
 export const fixtures: Record<string, Record<string, Fixture>> = {
@@ -161,32 +108,11 @@ export const fixtures: Record<string, Record<string, Fixture>> = {
     error: { label: 'isError', tool: 'search_vehicles', input: {}, result: fail },
     invalid: { label: 'Inválido', tool: 'search_vehicles', input: {}, result: ok({ cars: [] }) },
   },
-  'vehicle-detail': {
-    dates: { label: 'Detalle', tool: 'get_vehicle', input: { slug: 'vehicle-fx-1' }, result: ok(vehicleDetail) },
-    warnings: { label: 'Sin fechas · avisos', tool: 'get_vehicle', input: { slug: 'vehicle-fx-4' }, result: ok(vehicleDetailWarnings) },
-    error: { label: 'isError', tool: 'get_vehicle', input: {}, result: fail },
-    invalid: { label: 'Inválido', tool: 'get_vehicle', input: {}, result: ok({ name: 1 }) },
-  },
   quote: {
     fast: { label: 'Con Fast', tool: 'get_vehicle_quote', input: quoteInput, result: ok(quote) },
     noFast: { label: 'Sin Fast · aprobación automática', tool: 'get_vehicle_quote', input: quoteInput, result: ok(quoteNoFast) },
     error: { label: 'isError', tool: 'get_vehicle_quote', input: quoteInput, result: fail },
     invalid: { label: 'Inválido', tool: 'get_vehicle_quote', input: quoteInput, result: ok({ total: 'x' }) },
-  },
-  'booking-confirmation': {
-    request: { label: 'request', tool: 'create_booking_request', input: {}, result: ok(bookingRequest) },
-    instant: { label: 'instant', tool: 'create_booking_request', input: {}, result: ok(bookingInstant) },
-    fast: { label: 'instant · Fast', tool: 'create_booking_request', input: {}, result: ok(bookingFast) },
-    expired: { label: 'Enlace vencido', tool: 'create_booking_request', input: {}, result: ok(bookingExpired) },
-    changed: { label: 'Total cambió', tool: 'create_booking_request', input: {}, result: ok(bookingTotalChanged) },
-    pay: { label: 'pay_booking', tool: 'pay_booking', input: {}, result: ok(payBooking) },
-    error: { label: 'isError', tool: 'create_booking_request', input: {}, result: fail },
-  },
-  'my-bookings': {
-    list: { label: 'list_bookings', tool: 'list_bookings', input: {}, result: ok(bookingList) },
-    detail: { label: 'get_booking', tool: 'get_booking', input: {}, result: ok(bookingDetail) },
-    empty: { label: 'Vacío', tool: 'list_bookings', input: {}, result: ok({ bookings: [], page: 1, total_count: null, has_more: false }) },
-    error: { label: 'isError', tool: 'list_bookings', input: {}, result: fail },
   },
 };
 
@@ -197,10 +123,6 @@ export const serverTools: Record<string, (args: Record<string, unknown>) => Fixt
     if (args.sort === 'higher_price') vehicles.sort((a, b) => Number(b.price_per_day) - Number(a.price_per_day));
     return ok({ ...searchResult, vehicles: vehicles.slice(0, Number(args.limit ?? 5)), limit: args.limit ?? 5, search_context: { ...ctx, sort: args.sort ?? 'default' } });
   },
-  get_vehicle: (args) => args.slug === 'vehicle-fx-runtime'
-    ? { ...ok({ ...vehicleDetail, image_urls: ['https://images.example.com/detail.webp'] }), _meta: { 'rentennials/image_origins': ['https://images.example.com'] } }
-    : (args.slug === 'vehicle-fx-1' ? ok(vehicleDetail) : ok(vehicleDetailWarnings)),
-  get_booking: () => ok(bookingDetail),
   get_vehicle_quote: (args) => {
     const requested = Array.isArray(args.covers) ? args.covers : [];
     const options = [...quote.included_coverages, ...quote.available_coverages];
