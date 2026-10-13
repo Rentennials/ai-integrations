@@ -17,9 +17,9 @@ Use the `rentennials` tools. Catalog tools work without sign-in; profile and boo
 
 ## Book
 
-1. When the user asks to book, call `get_vehicle_quote` with the applied arguments. Show the total, dates, currency, coverages, extras and meeting points, then ask for explicit confirmation.
-2. Call `create_booking_request` with `confirmed=true` only after the user approves in this chat.
-3. If the result has `automatic_approval` true, call `get_current_user` and check `missing_payment_fields` first. Offer payment plan `fast` when `payment_fast` is available.
+1. When the user asks to book, call `get_vehicle_quote` with the applied arguments. Show the total, dates, currency, coverages, extras and meeting points.
+2. If that quote has `automatic_approval` true, call `get_current_user` and complete any `missing_payment_fields` with `update_current_user` before booking. Offer payment plan `fast` when `payment_fast` is available.
+3. Ask for explicit confirmation, then call `create_booking_request` with `confirmed=true` only after the user approves in this chat.
 
 ## Existing bookings
 
