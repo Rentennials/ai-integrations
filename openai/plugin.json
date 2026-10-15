@@ -32,10 +32,11 @@
         "screenshots": ["./assets/screenshot-1.png", "./assets/screenshot-2.png", "./assets/screenshot-3.png", "./assets/screenshot-4.png"]
       },
       "review": {
+        "demo_recording_url": "https://drive.google.com/drive/folders/1-RvImje8nM08wF_MhJ3k_wW50GAOHohF",
         "commerce": true,
         "commerce_description": "Rentennials is a peer-to-peer car rental marketplace. The plugin lets users search, quote and request bookings. No payment is captured inside ChatGPT and no card data is handled in the conversation. After explicit booking confirmation, the server may return a time-limited link to a Rentennials-hosted payment page. Approved bookings use the same external payment mechanism. Rental totals, currency, payment amounts and link expiry come from the server. Rentennials Fast, when available, includes a later automatic charge disclosed before confirmation. The booking response reports any difference from the quoted total."
       },
-      "publication": { "countries": ["AR", "US", "MX", "PE"], "release_notes": "Initial rental search, quotes and booking integration. Client review evidence is pending." }
+      "publication": { "countries": ["AR", "US", "MX", "PE"], "release_notes": "Search cars across Argentina, the United States, Mexico and Peru, review an editable rental summary with coverages and extras, and request bookings with secure external payment." }
     }
   }
 }
