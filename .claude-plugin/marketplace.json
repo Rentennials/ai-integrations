@@ -1,0 +1,12 @@
+{
+  "name": "rentennials",
+  "description": "Rentennials peer-to-peer car rental plugin for Claude.",
+  "owner": { "name": "Rentennials", "url": "https://www.rentennials.app" },
+  "plugins": [
+    {
+      "name": "rentennials",
+      "source": "./claude",
+      "description": "Find and book rental cars"
+    }
+  ]
+}

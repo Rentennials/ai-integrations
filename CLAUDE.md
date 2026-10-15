@@ -32,8 +32,10 @@ por el usuario y yarn.lock generado. Las dos views, bridge/harness, fixtures y
 tests están integrados y ajustados a los contratos reales. Las fuentes embebidas
 y la revisión final de capturas con marca siguen pendientes.
 
-`views/` contiene la especificación de MCP Apps. `claude/` y `whatsapp/` son
-placeholders. `openai/` contiene el plugin portable de ChatGPT/Codex, listing,
+`views/` contiene la especificación de MCP Apps. `claude/` contiene el plugin de
+Claude (marketplace en `.claude-plugin/`, conector y skill `rent-a-car`, listing y
+README); `.mcp.json` apunta a producción y nunca a staging. `whatsapp/` es
+placeholder. `openai/` contiene el plugin portable de ChatGPT/Codex, listing,
 casos pendientes y script de validación/ZIP; no hay `.app.json`.
 
 ## Convenciones
@@ -60,7 +62,8 @@ casos pendientes y script de validación/ZIP; no hay `.app.json`.
 ## Comandos y pendientes
 
 Scripts reales: `yarn lint`, `yarn typecheck`, `yarn test`, `yarn build`,
-`yarn views:dev`, `yarn test:e2e`, `yarn openai:validate`, `yarn openai:package`.
+`yarn views:dev`, `yarn test:e2e`, `yarn openai:validate`, `yarn openai:package`,
+`yarn claude:validate`.
 Ejecutar yarn build antes de yarn views:dev o yarn test:e2e: el harness carga
 los HTML compilados, no versiones especiales de las views. El host usa
 127.0.0.1 y el sandbox localhost como orígenes diferentes. Playwright usa

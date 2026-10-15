@@ -1,0 +1,15 @@
+{
+  "name": "rentennials",
+  "displayName": "Rentennials",
+  "version": "1.0.0",
+  "description": "Find and book rental cars",
+  "author": { "name": "Rentennials", "url": "https://www.rentennials.app" },
+  "homepage": "https://www.rentennials.app",
+  "repository": "https://github.com/Rentennials/ai-integrations",
+  "keywords": ["car rental", "travel", "peer-to-peer", "argentina"],
+  "icon": "./assets/icon.png",
+  "documentationUrl": "https://github.com/Rentennials/ai-integrations/tree/main/claude",
+  "supportUrl": "https://www.rentennials.app/contact",
+  "privacyPolicyUrl": "https://rentennials.app/privacy-policy",
+  "termsOfServiceUrl": "https://www.rentennials.app/terms-and-conditions"
+}
