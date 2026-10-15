@@ -1,0 +1,34 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - run: corepack enable
+      - run: test -f yarn.lock && yarn install --frozen-lockfile
+      - run: yarn lint
+      - run: yarn typecheck
+      - run: yarn test
+      - run: yarn build
+      - run: yarn workspace rentennials-mcp-views playwright install --with-deps chromium
+      - run: yarn test:e2e
+      - run: yarn openai:validate
+        env:
+          OPENAI_SUPPORT_URL: ${{ vars.OPENAI_SUPPORT_URL }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: view-test-results
+          path: |
+            views/playwright-report/
+            views/test-results/
+          if-no-files-found: ignore
