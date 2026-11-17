@@ -1,0 +1,26 @@
+[
+  {
+    "name": "vehicle-results",
+    "uri": "ui://rentennials/vehicle-results",
+    "file": "vehicle-results.html",
+    "csp": {
+      "connectDomains": [],
+      "resourceDomains": [
+        "https://photos.rentennials.app",
+        "https://api.rentennials.app"
+      ]
+    }
+  },
+  {
+    "name": "quote",
+    "uri": "ui://rentennials/quote",
+    "file": "quote.html",
+    "csp": {
+      "connectDomains": [],
+      "resourceDomains": [
+        "https://photos.rentennials.app",
+        "https://api.rentennials.app"
+      ]
+    }
+  }
+]
